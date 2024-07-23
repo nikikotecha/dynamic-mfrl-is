@@ -322,7 +322,7 @@ class Networks(object):
         self.agent_types = env.agent_types
         self.action_size: list = self.get_action_size(env)
         self.mean_action_size: int = sum(self.action_size)
-        self.feature_size: int = int(np.prod(env.feature_space.shape))
+        self.feature_size: int = int(np.prod(env.observation_space.shape))
         self.w: torch.Tensor = self.get_w()
         self.actor, self.actor_target = self.get_network('actor')  # list, list
         self.critic, self.critic_target = self.get_network('critic')  # list, list
