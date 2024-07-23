@@ -63,7 +63,7 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
     prev_steps = 0  # epi_num * epi_length
     samples = [None] * epi_length
     collective_reward = [0 for _ in range(num_types)]
-    collective_feature = [np.zeros(np.prod(env.feature_space.shape)) for _ in range(num_types)]
+    collective_feature = [np.zeros(np.prod(env.observation_space.shape)) for _ in range(num_types)]
 
     obs = init_set['obs']  # Initial observations.
     prev_m_act = init_set['m_act']  # Initial previous mean actions which is only used for Boltzmann policy.
