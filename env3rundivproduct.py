@@ -1,9 +1,9 @@
 from typing import Set
-from ray.rllib.env.multi_agent_env import MultiAgentEnv
+#from ray.rllib.env.multi_agent_env import MultiAgentEnv
 import copy
 import gymnasium as gym
 import numpy as np
-from ray.rllib.utils.typing import AgentID
+#from ray.rllib.utils.typing import AgentID
 from scipy.stats import poisson, randint
 from utils import get_stage, get_retailers, create_network, create_adjacency_matrix, find_connections
 
@@ -19,7 +19,7 @@ Reward - Total profit over the entire system
 Assumption: Max order or invenory capacity is based on per node per product; not total per node 
 
 """
-class MultiAgentInvManagementDiv(MultiAgentEnv):
+class MultiAgentInvManagementDiv():
     def __init__(self, config):
 
         self.config = config.copy()
