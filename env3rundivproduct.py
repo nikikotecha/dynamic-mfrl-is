@@ -24,7 +24,7 @@ class MultiAgentInvManagementDiv(MultiAgentEnv):
 
         self.config = config.copy()
         # Number of Periods in Episode
-        self.num_periods = config.get("num_periods", 50)
+        self.num_periods = config.get("num_periods", 365)
 
         # Structure
         self.independent = config.get("independent", True)
@@ -58,12 +58,12 @@ class MultiAgentInvManagementDiv(MultiAgentEnv):
         self.num_agents_type = config.get("num_agents_type", [1]* self.num_agents)
         self.num_types = config.get("num_types", self.num_nodes * self.num_products)
         self.inv_init = config.get("init_inv", np.ones((self.num_nodes, self.num_products))*100)
-        self.inv_target = config.get("inv_target", np.ones((self.num_nodes, self.num_products)) * 0)
+        self.inv_target = config.get("inv_target", np.ones((self.num_nodes, self.num_products)) * 15)
         self.delay = config.get("delay", np.ones((self.num_nodes, self.num_products), dtype=np.int32))
         self.time_dependency = config.get("time_dependency", False)
-        self.prev_actions = config.get("prev_actions", False)
-        self.prev_demand = config.get("prev_demand", False)
-        self.prev_length = config.get("prev_length", 1)
+        self.prev_actions = config.get("prev_actions", True)
+        self.prev_demand = config.get("prev_demand", True)
+        self.prev_length = config.get("prev_length", 10)
         self.max_delay = np.max(self.delay)
         if self.max_delay == 0:
             self.time_dependency = False
@@ -95,8 +95,8 @@ class MultiAgentInvManagementDiv(MultiAgentEnv):
         self.noisy_demand_threshold = config.get("noisy_demand_threshold", 0)
 
         # Lead time noise
-        self.noisy_delay = config.get("noisy_delay", False)
-        self.noisy_delay_threshold = config.get("noisy_delay_threshold", 0)
+        self.noisy_delay = config.get("noisy_delay", True)
+        self.noisy_delay_threshold = config.get("noisy_delay_threshold", 0.1)
 
         # Capacity
         self.inv_max = config.get("inv_max", np.ones((self.num_nodes, self.num_products), dtype=np.int16) * 100)
@@ -326,7 +326,7 @@ class MultiAgentInvManagementDiv(MultiAgentEnv):
         return fea_space
 
 
-    def reset(self, customer_demand=None, noisy_delay=False, noisy_delay_threshold=0):
+    def reset(self, customer_demand=None, noisy_delay=True, noisy_delay_threshold=0.1):
         """
         Create and initialize all variables.
         Nomenclature:
@@ -366,7 +366,22 @@ class MultiAgentInvManagementDiv(MultiAgentEnv):
                 max_demand = 30  # Adjust the range based on your requirements
                 self.customer_demand = np.random.randint(min_demand, max_demand + 1, 
                                              size=(len(self.retailers), self.num_periods, self.num_products))
+                amplitude = 10  # Amplitude of the sine wave
+                offset = 15  # Offset to ensure \(\lambda\) is always positive
+                periods_a = np.arange(self.num_periods)
 
+                # Generate a sine wave for \(\lambda\)
+                lambda_wave = amplitude * np.sin(2 * np.pi * periods_a / self.num_periods) + offset
+                
+                # Ensure \(\lambda\) is always positive
+                lambda_wave = np.clip(lambda_wave, 0, None)
+                    # Generate Poisson-distributed demand for each period, retailer, and product
+                for t in periods_a:
+                    for retailer in range(len(self.retailers)):
+                        for product in range(self.num_products):
+                            self.customer_demand[retailer, t, product] = np.random.poisson(lambda_wave[t])
+
+                print(self.customer_demand)
             # Poisson distribution
             elif self.demand_dist == "poisson":
                 self.mu = self.config.get("mu", 5)
@@ -500,7 +515,7 @@ class MultiAgentInvManagementDiv(MultiAgentEnv):
                     demand_history = np.zeros(self.prev_length)
                     for j in range(self.prev_length):
                         if j < t:
-                            demand_history[j] = self.demand[t - 1 - j, i]
+                            demand_history[j] = self.demand[t - 1 - j, i, p] #period, node, product
                     demand_history = self.rescale(demand_history, np.zeros(self.prev_length),
                                                 np.ones(self.prev_length)*self.demand_max[i][p],
                                                 self.a, self.b)
@@ -509,7 +524,7 @@ class MultiAgentInvManagementDiv(MultiAgentEnv):
                     order_history = np.zeros(self.prev_length)
                     for j in range(self.prev_length):
                         if j < t:
-                            order_history[j] = self.order_r[t - 1 - j, i]
+                            order_history[j] = self.order_r[t - 1 - j, i, p] #period, node, product
                     order_history = self.rescale(order_history, np.zeros(self.prev_length),
                                                 np.ones(self.prev_length)*self.order_max[i][p],
                                                 self.a, self.b)
@@ -935,6 +950,7 @@ def test():
             for p in range(env.num_products):
                 action_dict['node_' + str(i) + str(p)] = np.random.uniform(env.a, env.b)
         print(action_dict)
-        state, rewards, done, info = env.step(action_dict)
+        state, action_dict, rewards, action_mean, upd_state, fea  = env.step(action_dict)
     print('Done')
+
 
