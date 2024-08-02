@@ -40,7 +40,7 @@ class Actor(nn.Module):
         self.layers: nn.ModuleList = nn.ModuleList()
         self.observation_size: int = observation_size
         self.action_size: int = action_size
-        layer_dims: list = self.make_layer_dims(hidden_dims)
+        """layer_dims: list = self.make_layer_dims(hidden_dims)
         for layer_dim in layer_dims:
             fc_i = nn.Linear(layer_dim[0], layer_dim[1])
             self.layers.append(fc_i)
@@ -48,6 +48,22 @@ class Actor(nn.Module):
 
         self.mu_layer = nn.Linear(1, 1)
         self.log_std_layer = nn.Linear(1, 1)
+        self.LOG_STD_MAX = 2
+        self.LOG_STD_MIN = -20"""
+
+        # Create hidden layers
+        layers = []
+        input_dim = observation_size
+        for hidden_dim in hidden_dims:
+            layers.append(nn.Linear(input_dim, hidden_dim))
+            layers.append(nn.ReLU())
+            input_dim = hidden_dim
+        self.hidden_layers = nn.Sequential(*layers)
+        
+        # Output layers for mean and log_std
+        self.mu_layer = nn.Linear(hidden_dims[-1], action_size)
+        self.log_std_layer = nn.Linear(hidden_dims[-1], action_size)
+        
         self.LOG_STD_MAX = 2
         self.LOG_STD_MIN = -20
 
@@ -93,15 +109,19 @@ class Actor(nn.Module):
             Return the action probability using softmax (action).
             The shape will be (N, output_size: action_size).
         """
-        for i in range(self.num_layers):
+        """for i in range(self.num_layers):
             x = self.layers[i](x)
             if i < self.num_layers - 1:
-                x = F.relu(x)
+                x = F.relu(x)"""
 
+        x = self.hidden_layers(x)
+        
+        # Mean and log std output
         mean = self.mu_layer(x)
         log_std = self.log_std_layer(x)
         log_std = torch.clamp(log_std, self.LOG_STD_MIN, self.LOG_STD_MAX)
         std = torch.exp(log_std)
+
         #dist = torch.distributions.Normal(mean, std)
         #x = dist.rsample()
 
@@ -477,7 +497,7 @@ class Networks(object):
             dict of action probabilities of "all" agents.
             It might be only used for denoting the agents' probabilities in the video.
         """
-    
+
         agent_ids = list(obs.keys())
         agent_types = list(self.agent_types.values())  # env.agents_types = {agent_id: int}
         obs_t = [[] for _ in range(self.num_types)]
@@ -536,6 +556,7 @@ class Networks(object):
                     actions[agent_ids[idx]] = action[i].item()
                     idx += 1
         actions_probs = {}
+        print("actions get actions", actions)
         return actions, actions_probs
 
     def preprocess(self, samples: list):
@@ -603,7 +624,7 @@ class Networks(object):
 
         for agent_type in range(self.num_types):
             obs_t[agent_type] = np.array(obs_t[agent_type])
-            act_t[agent_type] = np.array(act_t[agent_type], dtype=np.int64)
+            act_t[agent_type] = np.array(act_t[agent_type], dtype=np.float64)
             rew_t[agent_type] = np.array(rew_t[agent_type])
             for action_type in range(self.num_types):
                 m_act_t[agent_type][action_type] = np.array(m_act_t[agent_type][action_type])
@@ -611,6 +632,7 @@ class Networks(object):
             fea_t[agent_type] = np.array(fea_t[agent_type])
             beta_t[agent_type] = np.array(beta_t[agent_type])
 
+        print("preprocess obst", obs_t, act_t)
         return obs_t, act_t, rew_t, m_act_t, n_obs_t, fea_t, beta_t
 
     def to_tensors(self, obs_t=None, act_t=None, rew_t=None, m_act_t=None, n_obs_t=None, fea_t=None, beta_t=None):
@@ -652,6 +674,7 @@ class Networks(object):
             Each element of the list is a tensor of something for each type.
             ex. tensors['obs'][0] = torch.Tensor: (N, observation_size: 15 * 15 * 6)
         """
+
         def get_tensor(x, size=None):
             """
             Return the float and reshaped tensor.
@@ -678,20 +701,23 @@ class Networks(object):
                 obs_t_tensor = []
                 for agent_type in range(self.num_types):
                     if self.args.mode_one_hot_obs:
+                        KeyError("Not implemented yet.")
                         # F.one_hot takes tensor with index values of shape (*) and returns a tensor of shape (*, num_classes)
-                        obs_tensor = torch.tensor(obs_t[agent_type], dtype=torch.int64)
+                        obs_tensor = torch.tensor(obs_t[agent_type], dtype=torch.float64)
                         obs_tensor = F.one_hot(obs_tensor, num_classes=self.observation_num_classes)
                         obs_tensor = get_tensor(obs_tensor, self.observation_size)  # Shape: (N, observation_size)
                     else:
-                        obs_tensor = torch.tensor(obs_t[agent_type], dtype=torch.int64)
+                        obs_tensor = torch.tensor(obs_t[agent_type], dtype=torch.float64)
                         obs_tensor = get_tensor(obs_tensor, self.observation_size)  # Shape: (N, observation_size)
                     obs_t_tensor.append(obs_tensor)
                 tensors['obs'] = obs_t_tensor
             if act_t is not None:
                 act_t_tensor = []
                 for agent_type in range(self.num_types):
-                    act_tensor = torch.tensor(act_t[agent_type], dtype=torch.int64)  # Shape should be (N,)
+                    print(act_t[agent_type])
+                    act_tensor = torch.tensor(act_t[agent_type], dtype=torch.float64)  # Shape should be (N,)
                     act_t_tensor.append(act_tensor)
+                    print("actor tensor ",act_t_tensor)
                 tensors['act'] = act_t_tensor
             if rew_t is not None:
                 rew_t_tensor = []
@@ -713,11 +739,11 @@ class Networks(object):
                 for agent_type in range(self.num_types):
                     if self.args.mode_one_hot_obs:
                         # F.one_hot takes tensor with index values of shape (*) and returns a tensor of shape (*, num_classes)
-                        n_obs_tensor = torch.tensor(n_obs_t[agent_type], dtype=torch.int64)
+                        n_obs_tensor = torch.tensor(n_obs_t[agent_type], dtype=torch.float64)
                         n_obs_tensor = F.one_hot(n_obs_tensor, num_classes=self.observation_num_classes)
                         n_obs_tensor = get_tensor(n_obs_tensor, self.observation_size)  # Shape should be (N, observation_size)
                     else:
-                        n_obs_tensor = torch.tensor(n_obs_t[agent_type], dtype=torch.int64)
+                        n_obs_tensor = torch.tensor(n_obs_t[agent_type], dtype=torch.float64)
                         n_obs_tensor = get_tensor(n_obs_tensor, self.observation_size)  # Shape should be (N, observation_size)
                     n_obs_t_tensor.append(n_obs_tensor)
                 tensors['n_obs'] = n_obs_t_tensor
@@ -789,11 +815,14 @@ class Networks(object):
                 #v_target = torch.sum(q_target * act_probs_target, dim=-1).view(-1, 1)
                 act_means_target, act_stds_target = self.actor_target[agent_type](obs[agent_type])
                 act_dist_target = distributions.Normal(act_means_target, act_stds_target)
-                sampled_actions_target = act_dist_target.sample()  # Sample actions from the target distribution
-                act_probs_target = act_dist_target.log_prob(sampled_actions_target).exp()  # Convert log probs to probs
+                
+                sampled_actions_target = act_dist_target.rsample()  # Sample actions from the target distribution
+                #act_probs_target = act_dist_target.log_prob(sampled_actions_target).exp()  # Convert log probs to probs
+                log_probs_target = act_dist_target.log_prob(sampled_actions_target).sum(dim=-1, keepdim=True)
+                v_target = torch.sum(q_target * log_probs_target.exp(), dim=-1).view(-1, 1)  # Using log_probs directly
 
                 # Value estimation
-                v_target = torch.sum(q_target * act_probs_target, dim=-1).view(-1, 1)
+                #v_target = torch.sum(q_target * act_probs_target, dim=-1).view(-1, 1)
 
             # Get action probabilities from the actor network.
             #act_probs = self.actor[agent_type](obs[agent_type])
@@ -804,6 +833,12 @@ class Networks(object):
             # Log probability of the taken actions
             log_probs = act_dist.log_prob(act[agent_type]).sum(dim=-1, keepdim=True)
 
+            # Calculate the advantage
+            advantage = q_target - v_target
+        
+            # Actor loss with advantage and log_probs
+            loss = -(advantage * log_probs)
+
             # Get q_target for the taken actions
             #q_target = q_target.gather(1, act[agent_type].long())
 
@@ -811,7 +846,7 @@ class Networks(object):
             #print("actor loss1", q_target, q_target.shape)
             #q_target = q_target[torch.arange(q_target.size(0)), act[agent_type]].view(-1, 1)
             #loss = - (q_target - v_target) * act_dist.log_prob(act[agent_type]).view(-1, 1)
-            loss = - (q_target - v_target) * act_dist.log_prob(act[agent_type])
+            #loss = - (q_target - v_target) * act_dist.log_prob(act[agent_type])
             loss = torch.mean(loss)
             actor_loss.append(loss)
 
@@ -919,6 +954,7 @@ class Networks(object):
 
     def update_networks(self, samples: list):
         obs_t, act_t, rew_t, m_act_t, n_obs_t, fea_t, beta_t = self.preprocess(samples)
+        print("act_t update networks2", act_t)
         tensors = self.to_tensors(obs_t=obs_t,
                                   act_t=act_t,
                                   rew_t=rew_t,

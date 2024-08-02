@@ -123,8 +123,8 @@ args.rew_clean = 0
 args.rew_harvest = 1
 """
 args.env = 'cleanup_multi_type_regular'
-args.num_types = 1
-args.num_agents = [env.num_agents]
+args.num_types = env.num_agents
+args.num_agents = [100]
 args.rew_clean = 0.05
 args.rew_harvest = 0.95
 
