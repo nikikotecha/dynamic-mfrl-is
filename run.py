@@ -12,9 +12,12 @@ from env3rundivproduct import MultiAgentInvManagementDiv
 import utils_all
 import utils_ssd
 
+import torch
 """
 Notes: You will run this 'main_ssd.py' file but you should change settings in 'parsed_args_ssd.py'
 """
+
+torch.autograd.set_detect_anomaly(True)
 
 
 GREEDY_BETA = 0.001

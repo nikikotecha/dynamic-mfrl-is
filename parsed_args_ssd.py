@@ -97,31 +97,9 @@ add_default_args(parser)
 args = parser.parse_args()
 
 """ Setting for the description. """
-args.description = 'beta v5. [args.beta, 0.1, 0.01, 0.001]. num_episodes=10000. save_freq=200. gamma=0.90.'
-args.setting_name = 'test'+utils_all.get_current_time_tag()+'_beta v5_num_episodes=10000_save_freq=200_gamma=0.90'
+args.description = 'update_freq = 10, update_freq_target = 20'
+args.setting_name = 'test'+utils_all.get_current_time_tag()+'update_freq = 10, update_freq_target = 20'
 
-""" Setting for the environment. 
-# Preset for MTMF-CLEANUP.
-args.env = 'cleanup_multi_type'
-args.num_types = 2
-args.num_agents = [2, 2]  # [# of cleaners, # of harvesters]
-args.rew_clean = 0.05
-args.rew_harvest = 0.95
-
-# Preset for reward design: cleanup.
-args.env = 'cleanup_reward'
-args.num_types = 1
-args.num_agents = [4]
-args.rew_clean = 0
-args.rew_harvest = 1
-
-# Preset for reward design: harvest.
-args.env = 'harvest_reward'
-args.num_types = 1
-args.num_agents = [4]
-args.rew_clean = 0
-args.rew_harvest = 1
-"""
 args.env = 'cleanup_multi_type_regular'
 args.num_types = 1
 args.num_agents = [env.num_agents]
@@ -141,24 +119,24 @@ args.h_dims_p = [256, 128, 64, 32]
 args.lr_a = 0.0001
 args.lr_c = 0.001
 args.lr_p = 0.001
-args.gamma = 0.90
+args.gamma = 0.99
 
 """ Setting for the experiment. """
-args.num_episodes = 10
-args.episode_length = 50
-args.epsilon = 0.9
-args.epsilon_decay_ver = 'linear'
+args.num_episodes = 30000
+args.episode_length = 365
+args.epsilon = 0.99
+args.epsilon_decay_ver = 'exponential'
 args.beta = 1.0
 args.beta_decay_ver = 'linear'  # 'exponential'
 args.mode_test = False
-args.random_seed = 1234  # 1280
+args.random_seed = 52  # 1280
 
 """ Setting for the learning. """
 args.K = 100
 args.buffer_size = 1000000
 args.mode_lr_decay = True
-args.update_freq = 1
-args.update_freq_target = 1
+args.update_freq = 10
+args.update_freq_target = 20
 args.tau = 0.01
 args.mode_one_hot_obs = False
 args.mode_reuse_networks = False  # True for Transfer Learning

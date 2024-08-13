@@ -29,7 +29,7 @@ class MultiAgentInvManagementDiv():
         # Structure
         self.independent = config.get("independent", True)
         self.share_network = config.get("share_network", False)
-        self.num_nodes = config.get("num_nodes", 10)
+        self.num_nodes = config.get("num_nodes", 5)
         self.num_products = config.get("num_products", 10)
         self.node_names = []
         for i in range(self.num_nodes):
@@ -37,7 +37,7 @@ class MultiAgentInvManagementDiv():
                 node_name = "node_" + str(i) + str(p)
                 self.node_names.append(node_name)
 
-        self.connections = config.get("connections",{0: [1], 1: [2,3], 2: [4, 5], 3:[5, 6], 4:[7], 5:[7,8], 6:[8,9], 7:[], 8:[], 9:[]})
+        self.connections = config.get("connections",{0: [1], 1: [2,3], 2: [4], 3:[], 4:[]})
         self.network = create_network(self.connections)
         self.adjacency = create_adjacency_matrix(self.connections, self.num_nodes, self.num_products)
         self.order_network = np.transpose(self.network)
