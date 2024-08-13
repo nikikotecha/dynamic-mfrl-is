@@ -76,9 +76,9 @@ class MultiAgentInvManagementDiv():
         self.node_cost = np.zeros((self.num_nodes, self.num_products))
         for i in range(self.num_nodes):
             for p in range(self.num_products):
-                self.node_price[i][p] = stage_price[get_stage(i, self.network)]
+                self.node_price[i][p] = stage_price[get_stage(i, self.network)] 
                 self.node_cost[i][p] = stage_cost[get_stage(i, self.network)]
-        
+
         self.price = config.get("price", np.flip(np.arange(self.num_stages + 1) + 1))
 
         # Stock Holding and Backlog cost
@@ -940,16 +940,16 @@ class MultiAgentInvManagementDiv():
 def test():
     config = {}
     env = MultiAgentInvManagementDiv(config)
-    env.reset()
+    ini_st = env.reset()
     done = False
-    for _ in range(50):
-        print("_", _)
+    for _ in range(365):
         action_dict = {}
         for i in range(env.num_nodes):
             for p in range(env.num_products):
                 action_dict['node_' + str(i) + str(p)] = np.random.uniform(env.a, env.b)
-        print(action_dict)
         state, action_dict, rewards, action_mean, upd_state, fea  = env.step(action_dict)
-    print('Done')
+
+test()
+print('Done')
 
 

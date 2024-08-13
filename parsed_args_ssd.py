@@ -101,8 +101,8 @@ args.description = 'update_freq = 10, update_freq_target = 20'
 args.setting_name = 'test'+utils_all.get_current_time_tag()+'update_freq = 10, update_freq_target = 20'
 
 args.env = 'cleanup_multi_type_regular'
-args.num_types = 1
-args.num_agents = [env.num_agents]
+args.num_types = env.num_agents
+args.num_agents = [100]
 args.rew_clean = 0.05
 args.rew_harvest = 0.95
 

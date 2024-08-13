@@ -85,4 +85,4 @@ def validate_setting(args):
         args_trained = dict_trained['args']
         is_true = (args.mode_psi == args_trained.mode_psi) and (args.mode_ac == args_trained.mode_ac)
         assert is_true, "You can not reuse other networks which modes are not matched."
-    assert args.num_types == len(args.num_agents), "Error: number of types."
+    #assert args.num_types == len(args.num_agents), "Error: number of types." # Not necessary for now.

@@ -88,6 +88,7 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
             else:
                 act, act_probs = networks.get_actions(obs, prev_m_act, GREEDY_BETA, is_target=False)
 
+        print()
         # Save the image.
         if is_draw:
             if i == 0:
