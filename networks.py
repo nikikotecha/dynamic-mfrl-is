@@ -16,6 +16,8 @@ from utils import get_stage, get_retailers, create_network, create_adjacency_mat
 from env3rundivproduct import MultiAgentInvManagementDiv
 from utils import init_weights
 
+"""Mean Field MARL with importance sampling """
+
 torch.autograd.set_detect_anomaly(True)
 
 
