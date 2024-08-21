@@ -12,12 +12,9 @@ from env3rundivproduct import MultiAgentInvManagementDiv
 import utils_all
 import utils_ssd
 
-import torch
 """
 Notes: You will run this 'main_ssd.py' file but you should change settings in 'parsed_args_ssd.py'
 """
-
-torch.autograd.set_detect_anomaly(True)
 
 
 GREEDY_BETA = 0.001
@@ -79,7 +76,13 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
             rand_prob = np.random.rand(1)[0]
             if is_train and rand_prob < epsilon:
                 act = {agent_id: np.random.uniform(low=env.action_space.low, high=env.action_space.high, size=env.action_space.shape) for agent_id in agent_ids}                
-                act_probs = {agent_id: "Random" for agent_id in agent_ids}
+                low = env.action_space.low
+                high = env.action_space.high
+                pdf_value = 1 / (high - low)
+                if pdf_value == 0:
+                    pdf_value = 0 + 1e-8 #ensures non zero, undefined value
+
+                act_probs = {agent_id: np.log(pdf_value) for agent_id in agent_ids}
             else:
                 act, act_probs = networks.get_actions(obs, prev_m_act, GREEDY_BETA, is_target=False)  # beta will not do anything here.
         else:  # Boltzmann policy using Q value based on critic or psi.
@@ -96,7 +99,7 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
             filename = image_path + "frame" + str(prev_steps + i).zfill(9) + ".png"
             env.render(filename=filename, i=prev_steps + i, epi_num=epi_num, act_probs=act_probs)
 
-        # Step.
+        # Step
         obs, act, rew, m_act, n_obs, fea = env.step(act)
 
         # Add one-transition sample to samples if is_train=True.

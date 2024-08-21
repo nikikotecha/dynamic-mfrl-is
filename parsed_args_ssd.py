@@ -100,12 +100,12 @@ add_default_args(parser)
 args = parser.parse_args()
 
 """ Setting for the description. """
-args.description = 'K=500'
-args.setting_name = 'test'+utils_all.get_current_time_tag()+'K=500'
+args.description = 'IS_K=300'
+args.setting_name = 'test'+utils_all.get_current_time_tag()+'IS_K=300'
 
 args.env = 'cleanup_multi_type_regular'
-args.num_types = env.num_agents
-args.num_agents = [100]
+args.num_types = 1
+args.num_agents = [50]
 args.rew_clean = 0.05
 args.rew_harvest = 0.95
 
@@ -137,7 +137,7 @@ args.mode_test = False
 args.random_seed = 52  # 1280
 
 """ Setting for the learning. """
-args.K = 500
+args.K = 300
 args.buffer_size = 1000000
 args.mode_lr_decay = True
 args.update_freq = 5

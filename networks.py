@@ -12,12 +12,11 @@ import torch.optim as optim
 #from sequential_social_dilemma_games.social_dilemmas.envs.cleanup import CleanupEnvMultiType, CleanupEnvReward
 #from sequential_social_dilemma_games.social_dilemmas.envs.harvest import HarvestEnvReward
 #from utils.utils_all import init_weights
-from utils import get_stage, get_retailers, create_network, create_adjacency_matrix, find_connectionsfrom utils import get_stage, get_retailers, create_network, create_adjacency_matrix, find_connections
+from utils import get_stage, get_retailers, create_network, create_adjacency_matrix, find_connections
 from env3rundivproduct import MultiAgentInvManagementDiv
 from utils import init_weights
 
-torch.autograd.set_detect_anomaly(True)
-
+"""Mean Field MARL with importance sampling """
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -54,8 +53,6 @@ class Actor(nn.Module):
 
         self.mu_layer = nn.Linear(32, 1)
         self.log_std_layer = nn.Linear(32, 1)
-        self.mu_layer = nn.Linear(32, 1)
-        self.log_std_layer = nn.Linear(32, 1)
         self.LOG_STD_MAX = 2
         self.LOG_STD_MIN = -20
 
@@ -80,7 +77,6 @@ class Actor(nn.Module):
             else:
                 layer_dim = [hidden_dims[i - 1], hidden_dims[i]]
             layer_dims.append(layer_dim)
-        layer_dim = [hidden_dims[-1], 32] # x2 to get mean and std
         layer_dim = [hidden_dims[-1], 32] # x2 to get mean and std
         layer_dims.append(layer_dim)
         return layer_dims
@@ -109,40 +105,9 @@ class Actor(nn.Module):
 
         mean = self.mu_layer(x)
         #mean = F.tanh(mean)
-        #mean = F.tanh(mean)
         log_std = self.log_std_layer(x)
         log_std = torch.clamp(log_std, self.LOG_STD_MIN, self.LOG_STD_MAX)
         std = torch.exp(log_std)
-        
-        std = torch.clamp(std, min=1e-6)  # Clamping std
-        
-        # Pre-squash distribution and sample
-        deterministic=False
-        with_logprob=True
-
-        pi_distribution = torch.distributions.Normal(mean, std)
-        if deterministic:
-            # Only used for evaluating policy at test time.
-            pi_action = mean
-        else:
-            pi_action = pi_distribution.rsample()
-
-        if with_logprob:
-            # Compute logprob from Gaussian, and then apply correction for Tanh squashing.
-            # NOTE: The correction formula is a little bit magic. To get an understanding 
-            # of where it comes from, check out the original SAC paper (arXiv 1801.01290) 
-            # and look in appendix C. This is a more numerically-stable equivalent to Eq 21.
-            # Try deriving it yourself as a (very difficult) exercise. :)
-            logp_pi = pi_distribution.log_prob(pi_action).sum(axis=-1)
-            logp_pi -= (2*(np.log(2) - pi_action - F.softplus(-2*pi_action))).sum(axis=1)
-        else:
-            logp_pi = None
-
-        pi_action = torch.tanh(pi_action)
-        #pi_action = self.act_limit * pi_action
-        
-        return pi_action, logp_pi
-
         
         std = torch.clamp(std, min=1e-6)  # Clamping std
         
@@ -180,7 +145,6 @@ class Actor(nn.Module):
 
         #x = F.softmax(x, dim=-1) this is for discrete, changing so its continuous 
         
-        #return mean, std 
         #return mean, std 
 
 
@@ -405,9 +369,6 @@ class Networks(object):
         self.psi_opt, self.psi_skd = self.get_opt_and_skd('psi')  # list, list
         self.connections = env.connections
         self.node_names = env.node_names
-
-        self.connections = env.connections
-        self.node_names = env.node_names
         self.adjacency = env.adjacency
 
     def get_observation_size(self, env: Union[MultiAgentInvManagementDiv]) -> int:
@@ -585,13 +546,10 @@ class Networks(object):
                 # TODO: check whether mode_ac and mode_psi properly work.
                 if self.args.mode_ac:  # based on actor.
                     if is_target:
-                        ##mean, std = self.actor_target[agent_type](obs_input)
-                        action, log_probs = self.actor_target[agent_type](obs_input)
+                        #mean, std = self.actor_target[agent_type](obs_input)
                         action, log_probs = self.actor_target[agent_type](obs_input)
                     else:
-                        ##mean, std = self.actor[agent_type](obs_input)
-                        action, log_probs = self.actor[agent_type](obs_input)
-
+                        #mean, std = self.actor[agent_type](obs_input)
                         action, log_probs = self.actor[agent_type](obs_input)
 
                 else:
@@ -612,14 +570,12 @@ class Networks(object):
                             q = self.critic[agent_type](obs_input, m_act_input)
                             action_probs = self.get_boltzmann_policy(q, beta_input)
                 #print("mean, std, obs", mean, std, obs_input)
-                ##print("mean, std, obs", mean, std, obs_input)
                 #action_dists = distributions.Normal(mean, std)
-                ##action = action_dists.rsample()
-                ##action = F.tanh(action)  #ensures its within -1 and 1
+                #action = action_dists.rsample()
+                #action = F.tanh(action)  #ensures its within -1 and 1
                 for i in range(self.num_agents[agent_type]):  # n_t
                     #actions_probs[agent_ids[idx]] = action_probs[i]
                     actions[agent_ids[idx]] = action[i].item()
-                    action_probs[agent_ids[idx]] = log_probs[i]
                     action_probs[agent_ids[idx]] = log_probs[i]
                     idx += 1
         return actions, action_probs
@@ -670,7 +626,7 @@ class Networks(object):
             Each element of beta_t is a numpy.ndarray of betas for each type.
             beta_t[i] = ndarray: (N * num_agents[i],) (N is the number of samples).
         """
-        obs_t, act_t, act_probs_t, rew_t, n_obs_t, fea_t, beta_t = [[[] for _ in range(self.num_types)] for _ in range(6)]
+        obs_t, act_t, act_probs_t, rew_t, n_obs_t, fea_t, beta_t = [[[] for _ in range(self.num_types)] for _ in range(7)]
         m_act_t = [[[] for _ in range(self.num_types)] for _ in range(self.num_types)]
         for sample in samples:
             obs, act, act_probs, rew, m_act, n_obs, fea, beta = sample
@@ -768,11 +724,9 @@ class Networks(object):
                     if self.args.mode_one_hot_obs:
                         # F.one_hot takes tensor with index values of shape (*) and returns a tensor of shape (*, num_classes)
                         obs_tensor = torch.tensor(obs_t[agent_type], dtype=torch.float64)
-                        obs_tensor = torch.tensor(obs_t[agent_type], dtype=torch.float64)
                         obs_tensor = F.one_hot(obs_tensor, num_classes=self.observation_num_classes)
                         obs_tensor = get_tensor(obs_tensor, self.observation_size)  # Shape: (N, observation_size)
                     else:
-                        obs_tensor = torch.tensor(obs_t[agent_type], dtype=torch.float64)
                         obs_tensor = torch.tensor(obs_t[agent_type], dtype=torch.float64)
                         obs_tensor = get_tensor(obs_tensor, self.observation_size)  # Shape: (N, observation_size)
                     obs_t_tensor.append(obs_tensor)
