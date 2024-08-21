@@ -101,7 +101,7 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
 
         # Add one-transition sample to samples if is_train=True.
         if is_train:
-            samples[i] = (obs, act, rew, m_act, n_obs, fea, beta)
+            samples[i] = (obs, act, act_probs, rew, m_act, n_obs, fea, beta)
 
         # Update collective_reward and collective_feature for each type.
         for idx, agent_id in enumerate(agent_ids):

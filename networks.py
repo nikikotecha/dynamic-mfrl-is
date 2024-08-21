@@ -670,16 +670,17 @@ class Networks(object):
             Each element of beta_t is a numpy.ndarray of betas for each type.
             beta_t[i] = ndarray: (N * num_agents[i],) (N is the number of samples).
         """
-        obs_t, act_t, rew_t, n_obs_t, fea_t, beta_t = [[[] for _ in range(self.num_types)] for _ in range(6)]
+        obs_t, act_t, act_probs_t, rew_t, n_obs_t, fea_t, beta_t = [[[] for _ in range(self.num_types)] for _ in range(6)]
         m_act_t = [[[] for _ in range(self.num_types)] for _ in range(self.num_types)]
         for sample in samples:
-            obs, act, rew, m_act, n_obs, fea, beta = sample
+            obs, act, act_probs, rew, m_act, n_obs, fea, beta = sample
             agent_ids = list(obs.keys())
             agent_types = list(self.agent_types.values())  # env.agents_types = {agent_id: int}
             for idx, agent_id in enumerate(agent_ids):
                 agent_type = agent_types[idx]
                 obs_t[agent_type].append(obs[agent_id])
                 act_t[agent_type].append(act[agent_id])
+                act_probs_t[agent_type].append(act_probs[agent_id])
                 rew_t[agent_type].append(rew[agent_id])
                 for action_type in range(self.num_types):
                     m_act_t[agent_type][action_type].append(m_act[action_type][agent_id])
@@ -690,7 +691,7 @@ class Networks(object):
         for agent_type in range(self.num_types):
             obs_t[agent_type] = np.array(obs_t[agent_type])
             act_t[agent_type] = np.array(act_t[agent_type], dtype=np.float64)
-            act_t[agent_type] = np.array(act_t[agent_type], dtype=np.float64)
+            act_probs_t[agent_type] = np.array(act_probs_t[agent_type], dtype=np.float64)
             rew_t[agent_type] = np.array(rew_t[agent_type])
             for action_type in range(self.num_types):
                 m_act_t[agent_type][action_type] = np.array(m_act_t[agent_type][action_type])
@@ -698,9 +699,9 @@ class Networks(object):
             fea_t[agent_type] = np.array(fea_t[agent_type])
             beta_t[agent_type] = np.array(beta_t[agent_type])
 
-        return obs_t, act_t, rew_t, m_act_t, n_obs_t, fea_t, beta_t
+        return obs_t, act_t, act_probs_t, rew_t, m_act_t, n_obs_t, fea_t, beta_t
 
-    def to_tensors(self, obs_t=None, act_t=None, rew_t=None, m_act_t=None, n_obs_t=None, fea_t=None, beta_t=None):
+    def to_tensors(self, obs_t=None, act_t=None, act_probs_t = None, rew_t=None, m_act_t=None, n_obs_t=None, fea_t=None, beta_t=None):
         """
         For each input, this function make a list of ndarrays to a list of tensors.
         If args.mode_one_hot_obs, observations will be changed into one-hot encoded version.
@@ -759,7 +760,7 @@ class Networks(object):
             x_tensor = x_tensor.view(-1, size)
             return x_tensor
 
-        tensors = {i: None for i in ['obs', 'act', 'rew', 'm_act', 'n_obs', 'fea', 'beta']}
+        tensors = {i: None for i in ['obs', 'act', 'act_probs','rew', 'm_act', 'n_obs', 'fea', 'beta']}
         with torch.no_grad():
             if obs_t is not None:
                 obs_t_tensor = []
@@ -782,6 +783,12 @@ class Networks(object):
                     act_tensor = torch.tensor(act_t[agent_type], dtype=torch.float64)  # Shape should be (N,)
                     act_t_tensor.append(act_tensor)
                 tensors['act'] = act_t_tensor
+            if act_probs_t is not None:
+                act_probs_t_tensor = []
+                for agent_type in range(self.num_types):
+                    act_probs_tensor = torch.tensor(act_probs_t[agent_type], dtype=torch.float64)
+                    act_probs_t_tensor.append(act_probs_tensor)
+                tensors['act_probs'] = act_probs_t_tensor
             if rew_t is not None:
                 rew_t_tensor = []
                 for agent_type in range(self.num_types):
@@ -884,16 +891,9 @@ class Networks(object):
             act, log_probs = self.actor[agent_type](obs[agent_type])
             advantage = q_target - v_target
             loss = -(advantage * log_probs)
-            
-            print("actor loss advantage", advantage)
-            print("actor loss logprobs", log_probs)
-            print("actor loss logprobs target exp", probs_target)
-
-
-
             loss = torch.mean(loss)
             actor_loss.append(loss)
-        print("actor loss", actor_loss)        print("actor loss", actor_loss)
+
         return actor_loss
 
     def calculate_psi_loss(self, tensors):
@@ -956,24 +956,12 @@ class Networks(object):
         critic_loss = []
         obs: list = tensors['obs']
         act: list = tensors['act']
+        act_probs: list = tensors['act_probs'] #log probs of the behavior policy (replay buffer values) 
         rew: list = tensors['rew']
         m_act: list = tensors['m_act']
         n_obs: list = tensors['n_obs']
         beta: list = tensors['beta']
 
-        actions_policy_type = {}
-        m_act_policy = {}
-        m_act_buffer = {}
-        batch_size = len(n_obs[0])  # Assuming n_obs is a list of tensors for each agent_type
-
-        actions_policy_type = {}
-        m_act_policy = {}
-        m_act_buffer = {}
-        batch_size = len(n_obs[0])  # Assuming n_obs is a list of tensors for each agent_type
-
-        actions_policy = {}
-        m_act_policy = {}
-        m_act_buffer = {}
         for agent_type in range(self.num_types):
             with torch.no_grad():
                 # Get q values of next observations from the q target network.
@@ -982,71 +970,55 @@ class Networks(object):
                 # Get action probabilities from the actor target network or the Boltzmann policy.
                 if self.args.mode_ac:
                     act_target, log_probs_target_n = self.actor_target[agent_type](n_obs[agent_type])
-                    log_probs_target_n = torch.clamp(log_probs_target_n, min=-20, max=20)
+                    log_probs_target_n = torch.clamp(log_probs_target_n, min=-20, max=20) #log probs of the current policy
                     probs_target_n = torch.softmax(log_probs_target_n, dim = 0)
-                    actions_policy_type[agent_type] = act_target
-                    #act_dist_target_n = distributions.Normal(means_target, stds_target)
-                    #sampled_actions_target = act_dist_target_n.sample()
-                    #log_probs_target_n = act_dist_target_n.log_prob(sampled_actions_target).sum(dim=-1, keepdim=True)
-                    #act_probs_target_n = act_dist_target_n.log_prob(act[agent_type]).exp()
+                    
+                    print("log probs target n", log_probs_target_n)
+
+                    # Compute the log probability of the mean action for the current policy.
+                    log_prob_mean_action_current = torch.sum(log_probs_target_n)
+                    print("log_prob_mean_action_current", log_prob_mean_action_current)
+
+                    # Retrieve the log probability of the mean action from the behavior policy.
+                    log_prob_mean_action_behavior = torch.sum(act_probs[agent_type])
+
+                    print("act_probs", act_probs[agent_type])
+                    print("log_prob_mean_action_behavior", log_prob_mean_action_behavior)  
+
+                    # Calculate the importance sampling weight based on mean actions.
+                    log_importance_weights = log_prob_mean_action_current - log_prob_mean_action_behavior
+                    importance_weights = torch.exp(log_importance_weights)
+                    print("importance_weights", importance_weights)
+                    importance_weights = torch.clamp(importance_weights, min = 0, max=20)
+
 
                 else:
                     act_probs_target_n = self.get_boltzmann_policy(q_target_n, beta[agent_type])
 
-                v_target_n = torch.sum(q_target_n * probs_target_n, dim=-1, keepdim=True)
-                print("critic q_target_n", q_target_n)
-                print("critic log_probs_target_n", log_probs_target_n)
-                print("critic probs", probs_target_n)
-                print("critic v target n", v_target_n)
+                # Get v values using q values and action probabilities.
+                #print("q_target_n", q_target_n.shape, act_probs_target_n.shape)
+                # Compute the value target using sampled actions and log probabilities
+                #v_target_n = torch.exp(log_probs_target_n) * q_target_n
+                #v_target_n = torch.sum(q_target_n * act_probs_target_n, dim=-1).view(-1, 1)
+                v_target_n = torch.sum(q_target_n * torch.exp(log_probs_target_n), dim=-1, keepdim=True)
+
 
             # Get critic loss using values.
             q = self.critic[agent_type](obs[agent_type], m_act[agent_type])
 
-        actions_policy = dict(zip(self.node_names, actions_policy_type.values()))
+            #q = q[torch.arange(q.size(0)), act[agent_type]].view(-1, 1)
 
-        for agent_type in range(self.num_types):
-            if self.args.importance_sampling: 
-                m_act_policy[agent_type] = []
-                for batch_idx in range(batch_size):
-                    node_name = self.node_names[agent_type]
-
-                    #Find the one hop neighbourhood of the agent in question 
-                    one_hop_connections = find_connections(node_name, self.adjacency, self.node_names)
-                    # Collect actions for calculating mean action under the current policy
-                    one_hop_actions = []
-                    for neighbour in one_hop_connections:
-                        one_hop_actions.append(actions_policy[neighbour][batch_idx])
-
-                    # Calculate the mean action for the current sample
-                    one_hop_actions_t = torch.stack(one_hop_actions)  # Convert list of tensors to a single tensor
-                    mean_action = one_hop_actions_t.mean(dim=0)  # Mean across the neighbors
-                    m_act_policy[agent_type].append(mean_action)
-
-                m_act_policy[agent_type] = torch.stack(m_act_policy[agent_type])
-                m_act_buffer = m_act[agent_type]
-
-        for agent_type in range(self.num_types):
-            if self.args.importance_sampling:
-                # Calculate importance weights based on the ratio of mean actions
-                weights = m_act_policy[agent_type]/m_act_buffer[agent_type] + 1e-8 #adding a small value to ensure non zero divison 
-                loss_no_correction = (rew[agent_type] + self.args.gamma * v_target_n - q) ** 2
-                weights = torch.clamp(weights, min=-2, max=20)
-                loss = weights * loss_no_correction
-                print("weight corrections", weights, loss_no_correction, loss)
-            
-            else:
-                loss = (rew[agent_type] + self.args.gamma * v_target_n - q) ** 2
-
+            loss = importance_weights * (rew[agent_type] + self.args.gamma * v_target_n - q) ** 2
             loss = torch.mean(loss)
             critic_loss.append(loss)
 
-        print("critic loss", critic_loss)
         return critic_loss
 
     def update_networks(self, samples: list):
-        obs_t, act_t, rew_t, m_act_t, n_obs_t, fea_t, beta_t = self.preprocess(samples)
+        obs_t, act_t, act_probs_t, rew_t, m_act_t, n_obs_t, fea_t, beta_t = self.preprocess(samples)
         tensors = self.to_tensors(obs_t=obs_t,
                                   act_t=act_t,
+                                  act_probs_t=act_probs_t,
                                   rew_t=rew_t,
                                   m_act_t=m_act_t,
                                   n_obs_t=n_obs_t,
