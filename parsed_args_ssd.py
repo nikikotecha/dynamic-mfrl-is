@@ -90,6 +90,9 @@ def add_default_args(parser):
                         help="Frequency of saving results and networks (unit: episode).")
     parser.add_argument("--mode_draw", type=bool, default=False,
                         help="True if we draw plt during the training.")
+    parser.add_argument("--importance_sampling", type=bool, default=True,
+                        help="True if we use importance sampling for the critic loss calculation.")
+
 
 
 parser = argparse.ArgumentParser()
@@ -97,8 +100,8 @@ add_default_args(parser)
 args = parser.parse_args()
 
 """ Setting for the description. """
-args.description = 'update_freq = 10, update_freq_target = 20'
-args.setting_name = 'test'+utils_all.get_current_time_tag()+'update_freq = 10, update_freq_target = 20'
+args.description = 'K=500'
+args.setting_name = 'test'+utils_all.get_current_time_tag()+'K=500'
 
 args.env = 'cleanup_multi_type_regular'
 args.num_types = env.num_agents
@@ -113,6 +116,8 @@ args.lv_incentive = 0.0
 """ Setting for the networks. """
 args.mode_ac = True  # True if actor-critic/psi.
 args.mode_psi = False  # True if SF.
+args.importance_sampling = False # True if we use importance sampling for the critic loss calculation.
+
 args.h_dims_a = [256, 128, 64, 32]
 args.h_dims_c = [256, 128, 64, 32]
 args.h_dims_p = [256, 128, 64, 32]
@@ -132,11 +137,11 @@ args.mode_test = False
 args.random_seed = 52  # 1280
 
 """ Setting for the learning. """
-args.K = 100
+args.K = 500
 args.buffer_size = 1000000
 args.mode_lr_decay = True
-args.update_freq = 10
-args.update_freq_target = 20
+args.update_freq = 5
+args.update_freq_target = 10
 args.tau = 0.01
 args.mode_one_hot_obs = False
 args.mode_reuse_networks = False  # True for Transfer Learning
