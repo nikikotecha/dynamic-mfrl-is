@@ -43,9 +43,14 @@ def add_default_args(parser):
     # Setting for the networks.
     parser.add_argument("--mode_ac", type=bool, default=True, help="Mode selection (Actor-critic/psi or critic/psi).")
     parser.add_argument("--mode_psi", type=bool, default=False, help="Mode selection (critic or psi).")
+    parser.add_argument("--mode_mfp", type=bool, default=True, help="Mode selection (mfp benchmark).")
+    parser.add_argument("--mode_is", type=bool, default=False, help="True if we use importance sampling for the critic loss calculation.")
+
     parser.add_argument("--h_dims_a", type=list, default=[], help="Default layer size for actor hidden layers.")
     parser.add_argument("--h_dims_c", type=list, default=[], help="Default layer size for critic hidden layers.")
     parser.add_argument("--h_dims_p", type=list, default=[], help="Default layer size for psi hidden layers.")
+    parser.add_argument("--h_dims_m", type=list, default=[], help="Default layer size for psi hidden layers.")
+
     parser.add_argument("--lr_a", type=float, default=0, help="Default learning rate for the actor network.")
     parser.add_argument("--lr_c", type=float, default=0, help="Default learning rate for the critic network.")
     parser.add_argument("--lr_p", type=float, default=0, help="Default learning rate for the psi network.")
@@ -104,8 +109,8 @@ args.description = 'K=500'
 args.setting_name = 'test'+utils_all.get_current_time_tag()+'K=500'
 
 args.env = 'cleanup_multi_type_regular'
-args.num_types = env.num_agents
-args.num_agents = [100]
+args.num_types = 1
+args.num_agents = [50]
 args.rew_clean = 0.05
 args.rew_harvest = 0.95
 
@@ -116,11 +121,15 @@ args.lv_incentive = 0.0
 """ Setting for the networks. """
 args.mode_ac = True  # True if actor-critic/psi.
 args.mode_psi = False  # True if SF.
+args.mode_mfp = True  # True if MFP.
+args.mode_is = False # True if we use importance sampling for the critic loss calculation.
 args.importance_sampling = False # True if we use importance sampling for the critic loss calculation.
 
 args.h_dims_a = [256, 128, 64, 32]
 args.h_dims_c = [256, 128, 64, 32]
 args.h_dims_p = [256, 128, 64, 32]
+args.h_dims_m = [256, 128, 64, 32]
+
 args.lr_a = 0.0001
 args.lr_c = 0.001
 args.lr_p = 0.001
@@ -137,7 +146,7 @@ args.mode_test = False
 args.random_seed = 52  # 1280
 
 """ Setting for the learning. """
-args.K = 500
+args.K = 300
 args.buffer_size = 1000000
 args.mode_lr_decay = True
 args.update_freq = 5
