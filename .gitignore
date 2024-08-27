@@ -1,0 +1,5 @@
+# Ignore everything in the results_ssd folder
+results_ssd/
+
+# Ignore all .pbs files
+*.pbs
