@@ -1,0 +1,13 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1:mem=800gb:ngpus=1
+#PBS -l walltime=72:00:00
+
+cd $PBS_O_WORKDIR
+
+echo $pwd
+eval "$(~/anaconda3/bin/conda shell.bash hook)"
+source activate
+conda info --envs
+source activate mfmarll
+
+python run.py
