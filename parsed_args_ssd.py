@@ -2,7 +2,7 @@ import argparse
 
 import utils_all # This is the file that contains the functions that are used in this file.
 from env3rundivproduct import MultiAgentInvManagementDiv
-
+import torch 
 #default configuration but change the environment configuration through the config dictionary
 def config_args():
     config = {}
@@ -97,6 +97,8 @@ def add_default_args(parser):
                         help="True if we draw plt during the training.")
     parser.add_argument("--importance_sampling", type=bool, default=True,
                         help="True if we use importance sampling for the critic loss calculation.")
+    parser.add_argument("--device", type=str, default="cpu",
+                        help="Device for the training. 'cuda' or 'cpu' can be used.")    
 
 
 
@@ -104,10 +106,12 @@ parser = argparse.ArgumentParser()
 add_default_args(parser)
 args = parser.parse_args()
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("device: ", device)
+args.device = device
 """ Setting for the description. """
-args.description = 'IS_K=300'
-args.setting_name = 'test'+utils_all.get_current_time_tag()+'IS_K=300'
-
+args.description = '30k_k300'
+args.setting_name = 'test'+utils_all.get_current_time_tag()+'30k_k300'
 args.env = 'cleanup_multi_type_regular'
 args.num_types = 1
 args.num_agents = [50]
@@ -121,9 +125,9 @@ args.lv_incentive = 0.0
 """ Setting for the networks. """
 args.mode_ac = True  # True if actor-critic/psi.
 args.mode_psi = False  # True if SF.
-args.mode_mfp = True  # True if MFP.
-args.mode_is = False # True if we use importance sampling for the critic loss calculation.
-args.importance_sampling = False # True if we use importance sampling for the critic loss calculation.
+args.mode_mfp = False  # True if MFP.
+args.mode_is = True # True if we use importance sampling for the critic loss calculation.
+args.importance_sampling = True # True if we use importance sampling for the critic loss calculation.
 
 args.h_dims_a = [256, 128, 64, 32]
 args.h_dims_c = [256, 128, 64, 32]

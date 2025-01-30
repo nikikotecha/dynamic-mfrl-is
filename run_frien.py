@@ -1,3 +1,7 @@
+import ray  # For parallel processing
+
+# Initialize Ray for parallel rollouts
+
 import random
 import sys
 import time
@@ -12,11 +16,7 @@ from env3rundivproduct import MultiAgentInvManagementDiv
 import utils_all
 import utils_ssd
 
-"""
-Notes: You will run this 'main_ssd.py' file but you should change settings in 'parsed_args_ssd.py'
-"""
-
-
+ray.init(ignore_reinit_error=True, n_cpus = 5)
 GREEDY_BETA = 0.001
 
 
@@ -92,7 +92,9 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
                 act, act_probs = networks.get_actions(obs, prev_m_act, GREEDY_BETA, is_target=False)
 
         # Save the image.
+        is_draw = False
         if is_draw:
+            print("Whyyy.....Run the episode with saving figures...")
             if i == 0:
                 print("Run the episode with saving figures...")
             filename = image_path + "frame" + str(prev_steps + i).zfill(9) + ".png"
@@ -117,7 +119,7 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
         # Update obs and prev_m_act for the next step.
         obs = n_obs
         prev_m_act = m_act
-
+        is_draw = False
         # Save the last image.
         if is_draw and i == epi_length - 1:
             act_probs = {agent_ids[j]: "End" for j in range(len(agent_ids))}
@@ -133,9 +135,12 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
 
     return samples, init_set, collective_reward, collective_feature
 
+@ray.remote
+def parallel_rollout(networks, env, args, init_set, epi_num, explore_params, paths, is_draw = False, is_train=True):
+    """Wraps roll_out for parallel execution using Ray."""
+    return roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_train)
 
 if __name__ == "__main__":
-    # Seed setting.
     utils_all.set_random_seed(args.random_seed)
 
     # Build the environment.
@@ -176,16 +181,18 @@ if __name__ == "__main__":
         explore_params = utils_ssd.get_explore_params(explore_params, i, args)
 
         # Run roll_out function (We can get 1,000 (epi_length) samples and collective reward of this episode).
-        samples, init_set, collective_reward, collective_feature = roll_out(networks=networks,
+        samples, init_set, collective_reward, collective_feature = ray.get([
+                                                    parallel_rollout.remote(networks=networks,
                                                                             env=env,
                                                                             args=args,
                                                                             init_set=init_set,
                                                                             epi_num=i,
                                                                             explore_params=explore_params,
                                                                             paths=paths,
-                                                                            is_draw=is_draw,
-                                                                            is_train=True,
-                                                                            )
+                                                                            is_draw=False,
+                                                                            is_train=True,)
+            for i in range(10)
+        ])
         buffer += samples
         for agent_type in range(args.num_types):
             collective_rewards[agent_type, i] = collective_reward[agent_type]
@@ -295,3 +302,4 @@ if __name__ == "__main__":
                                           },
                                 path=saved_path,
                                 name=filename)
+            

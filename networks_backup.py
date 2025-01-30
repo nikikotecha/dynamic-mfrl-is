@@ -579,14 +579,12 @@ class Networks(object):
                 net = Actor(observation_size=self.observation_size,
                             action_size=self.action_size[agent_type],
                             hidden_dims=self.args.h_dims_a)
-                net = net.to(self.args.device)
                 net.apply(init_weights)
             if is_critic:
                 net = Critic(observation_size=self.observation_size,
                              action_size=self.action_size[agent_type],
                              mean_action_size=self.mean_action_size,
                              hidden_dims=self.args.h_dims_c)
-                net = net.to(self.args.device)
                 net.apply(init_weights)
             if is_psi:
                 net = Psi(observation_size=self.observation_size,
@@ -594,13 +592,11 @@ class Networks(object):
                           mean_action_size=self.mean_action_size,
                           feature_size=self.feature_size,
                           hidden_dims=self.args.h_dims_p)
-                net = net.to(self.args.device)
                 net.apply(init_weights)
             if is_mfp:
                 net = MFP(observation_size=self.observation_size,
                           mean_action_size=self.mean_action_size,
                           hidden_dims=self.args.h_dims_m)
-                net = net.to(self.args.device)
                 net.apply(init_weights)
             network.append(net)
         network_target = copy.deepcopy(network)
@@ -831,7 +827,7 @@ class Networks(object):
                 fea_t[agent_type].append(fea[agent_id])
                 beta_t[agent_type].append(beta)
 
-        """for agent_type in range(self.num_types):
+        for agent_type in range(self.num_types):
             obs_t[agent_type] = np.array(obs_t[agent_type])
             act_t[agent_type] = np.array(act_t[agent_type], dtype=np.float64)
             act_probs_t[agent_type] = np.array(act_probs_t[agent_type], dtype=np.float64)
@@ -840,19 +836,7 @@ class Networks(object):
                 m_act_t[agent_type][action_type] = np.array(m_act_t[agent_type][action_type])
             n_obs_t[agent_type] = np.array(n_obs_t[agent_type])
             fea_t[agent_type] = np.array(fea_t[agent_type])
-            beta_t[agent_type] = np.array(beta_t[agent_type])"""
-        
-        for agent_type in range(self.num_types):
-            obs_t[agent_type] = np.array([x.cpu().numpy() if isinstance(x, torch.Tensor) else x for x in obs_t[agent_type]])
-            act_t[agent_type] = np.array([x.cpu().numpy() if isinstance(x, torch.Tensor) else x for x in act_t[agent_type]], dtype=np.float64)
-            act_probs_t[agent_type] = np.array([x.cpu().numpy() if isinstance(x, torch.Tensor) else x for x in act_probs_t[agent_type]], dtype=np.float64)
-            rew_t[agent_type] = np.array([x.cpu().numpy() if isinstance(x, torch.Tensor) else x for x in rew_t[agent_type]])
-            for action_type in range(self.num_types):
-                m_act_t[agent_type][action_type] = np.array([x.cpu().numpy() if isinstance(x, torch.Tensor) else x for x in m_act_t[agent_type][action_type]])
-            n_obs_t[agent_type] = np.array([x.cpu().numpy() if isinstance(x, torch.Tensor) else x for x in n_obs_t[agent_type]])
-            fea_t[agent_type] = np.array([x.cpu().numpy() if isinstance(x, torch.Tensor) else x for x in fea_t[agent_type]])
-            beta_t[agent_type] = np.array([x.cpu().numpy() if isinstance(x, torch.Tensor) else x for x in beta_t[agent_type]])
- 
+            beta_t[agent_type] = np.array(beta_t[agent_type])
 
         return obs_t, act_t, act_probs_t, rew_t, m_act_t, n_obs_t, fea_t, beta_t
 
@@ -928,28 +912,24 @@ class Networks(object):
                     else:
                         obs_tensor = torch.tensor(obs_t[agent_type], dtype=torch.float64)
                         obs_tensor = get_tensor(obs_tensor, self.observation_size)  # Shape: (N, observation_size)
-                        obs_tensor = obs_tensor.to(self.args.device)    
                     obs_t_tensor.append(obs_tensor)
                 tensors['obs'] = obs_t_tensor
             if act_t is not None:
                 act_t_tensor = []
                 for agent_type in range(self.num_types):
                     act_tensor = torch.tensor(act_t[agent_type], dtype=torch.float64)  # Shape should be (N,)
-                    act_tensor = act_tensor.to(self.args.device)
                     act_t_tensor.append(act_tensor)
                 tensors['act'] = act_t_tensor
             if act_probs_t is not None:
                 act_probs_t_tensor = []
                 for agent_type in range(self.num_types):
                     act_probs_tensor = torch.tensor(act_probs_t[agent_type], dtype=torch.float64)
-                    act_probs_tensor = act_probs_tensor.to(self.args.device)
                     act_probs_t_tensor.append(act_probs_tensor)
                 tensors['act_probs'] = act_probs_t_tensor
             if rew_t is not None:
                 rew_t_tensor = []
                 for agent_type in range(self.num_types):
                     rew_tensor = get_tensor(rew_t[agent_type], 1)  # Shape should be (N, 1)
-                    rew_tensor = rew_tensor.to(self.args.device)
                     rew_t_tensor.append(rew_tensor)
                 tensors['rew'] = rew_t_tensor
             if m_act_t is not None:
@@ -958,7 +938,6 @@ class Networks(object):
                     m_act_t_t_tensor = []  # for action_type
                     for action_type in range(self.num_types):
                         m_act_tensor = get_tensor(m_act_t[agent_type][action_type], self.action_size[action_type])  # Shape should be (N, action_size[type])
-                        m_act_tensor = m_act_tensor.to(self.args.device)
                         m_act_t_t_tensor.append(m_act_tensor)
                     m_act_t_tensor.append(m_act_t_t_tensor)
                 tensors['m_act'] = m_act_t_tensor
@@ -973,21 +952,18 @@ class Networks(object):
                     else:
                         n_obs_tensor = torch.tensor(n_obs_t[agent_type], dtype=torch.float64)
                         n_obs_tensor = get_tensor(n_obs_tensor, self.observation_size)  # Shape should be (N, observation_size)
-                        n_obs_tensor = n_obs_tensor.to(self.args.device)
                     n_obs_t_tensor.append(n_obs_tensor)
                 tensors['n_obs'] = n_obs_t_tensor
             if fea_t is not None:
                 fea_t_tensor = []
                 for agent_type in range(self.num_types):
-                    fea_tensor = get_tensor(fea_t[agent_type], self.feature_size) 
-                    fea_tensor = fea_tensor.to(self.args.device)   # Shape should be (N, feature_size)
+                    fea_tensor = get_tensor(fea_t[agent_type], self.feature_size)    # Shape should be (N, feature_size)
                     fea_t_tensor.append(fea_tensor)
                 tensors['fea'] = fea_t_tensor
             if beta_t is not None:
                 beta_t_tensor = []
                 for agent_type in range(self.num_types):
                     beta_tensor = torch.tensor(beta_t[agent_type], dtype=torch.float)  # Shape should be (N,)
-                    beta_tensor = beta_tensor.to(self.args.device)
                     beta_t_tensor.append(beta_tensor)
                 tensors['beta'] = beta_t_tensor
 
@@ -1042,7 +1018,6 @@ class Networks(object):
                     psi_target = self.psi_target[agent_type](obs[agent_type], m_act[agent_type])  # Shape: (N[agent_type], action_size[agent_type], feature_size)
                     q_target = torch.tensordot(psi_target, self.w, dims=([2], [0]))  # Shape: (N[agent_type], action_size[agent_type])
                 else:
-                    
                     q_target = self.critic_target[agent_type](obs[agent_type], m_act[agent_type])  # Shape: (N[agent_type], action_size[agent_type])
                 
                 act_target, log_probs_target = self.actor_target[agent_type](obs[agent_type])
@@ -1211,8 +1186,8 @@ class Networks(object):
                     for i in indices: 
                         print("act_probs", act_probs[agent_type][buffer_idx])
                         print("log_probs_target_all", log_probs_target_all[i][buffer_idx])
-                        sum_behaviour.append(act_probs[i][buffer_idx].cpu().numpy())
-                        sum_current.append(log_probs_target_all[i][buffer_idx].cpu().numpy())
+                        sum_behaviour.append(act_probs[i][buffer_idx])
+                        sum_current.append(log_probs_target_all[i][buffer_idx])
                     log_prob_mean_action_behavior.append(np.sum(sum_behaviour))
                     log_prob_mean_action_current.append(np.sum(sum_current))
                     print("log_prob_mean_action_behavior", log_prob_mean_action_behavior, log_prob_mean_action_current)
@@ -1236,12 +1211,9 @@ class Networks(object):
                 q = self.critic[agent_type](obs[agent_type], mfp_target_n)
 
             #q = q[torch.arange(q.size(0)), act[agent_type]].view(-1, 1)
-
             if self.args.mode_is:
                 print("q", q)
                 print("v_target_n", v_target_n)
-                print(importance_weights.device, rew[agent_type].device, v_target_n.device, q.device)
-                importance_weights = importance_weights.to(self.args.device)
                 loss = importance_weights * (rew[agent_type] + self.args.gamma * v_target_n - q) ** 2
             else:
                 loss = (rew[agent_type] + self.args.gamma * v_target_n - q) ** 2
@@ -1261,7 +1233,6 @@ class Networks(object):
                                   n_obs_t=n_obs_t,
                                   fea_t=fea_t,
                                   beta_t=beta_t)
-        
         actor_loss, psi_loss, critic_loss = self.calculate_losses(tensors)
         for agent_type in range(self.num_types):
             if self.args.mode_ac:  # actor
