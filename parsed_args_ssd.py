@@ -44,12 +44,14 @@ def add_default_args(parser):
     parser.add_argument("--mode_ac", type=bool, default=True, help="Mode selection (Actor-critic/psi or critic/psi).")
     parser.add_argument("--mode_psi", type=bool, default=False, help="Mode selection (critic or psi).")
     parser.add_argument("--mode_mfp", type=bool, default=True, help="Mode selection (mfp benchmark).")
+    parser.add_argument("--mode_mfap", type=bool, default=False, help="Mode selection (mfap benchmark).")
     parser.add_argument("--mode_is", type=bool, default=False, help="True if we use importance sampling for the critic loss calculation.")
 
     parser.add_argument("--h_dims_a", type=list, default=[], help="Default layer size for actor hidden layers.")
     parser.add_argument("--h_dims_c", type=list, default=[], help="Default layer size for critic hidden layers.")
     parser.add_argument("--h_dims_p", type=list, default=[], help="Default layer size for psi hidden layers.")
     parser.add_argument("--h_dims_m", type=list, default=[], help="Default layer size for psi hidden layers.")
+    parser.add_argument("--h_dims_mfap", type=list, default=[], help="Default layer size for psi hidden layers.")
 
     parser.add_argument("--lr_a", type=float, default=0, help="Default learning rate for the actor network.")
     parser.add_argument("--lr_c", type=float, default=0, help="Default learning rate for the critic network.")
@@ -110,8 +112,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("device: ", device)
 args.device = device
 """ Setting for the description. """
-args.description = '30k_k300'
-args.setting_name = 'test'+utils_all.get_current_time_tag()+'30k_k300'
+args.description = 'mfp_k=300_lr_m = 0.0001'
+args.setting_name = 'test'+utils_all.get_current_time_tag()+'mfp_k=300_lr_m = 0.0001'
 args.env = 'cleanup_multi_type_regular'
 args.num_types = 1
 args.num_agents = [50]
@@ -126,17 +128,21 @@ args.lv_incentive = 0.0
 args.mode_ac = True  # True if actor-critic/psi.
 args.mode_psi = False  # True if SF.
 args.mode_mfp = False  # True if MFP.
-args.mode_is = True # True if we use importance sampling for the critic loss calculation.
-args.importance_sampling = True # True if we use importance sampling for the critic loss calculation.
+args.mode_mfap = False # True if MFAP.
+args.mode_is = False # True if we use importance sampling for the critic loss calculation.
+args.importance_sampling = False # True if we use importance sampling for the critic loss calculation.
 
 args.h_dims_a = [256, 128, 64, 32]
 args.h_dims_c = [256, 128, 64, 32]
 args.h_dims_p = [256, 128, 64, 32]
 args.h_dims_m = [256, 128, 64, 32]
+args.h_dims_mfap = [256, 128, 64, 32]
 
 args.lr_a = 0.0001
 args.lr_c = 0.001
 args.lr_p = 0.001
+args.lr_m = 0.0001
+args.lr_mfap = 0.001
 args.gamma = 0.99
 
 """ Setting for the experiment. """
@@ -163,7 +169,7 @@ args.file_path = './results_ssd_final/alpha=0.50/000029999.tar'
 """ Setting for the draw and the save. """
 args.fps = 3
 args.draw_freq = 100
-args.save_freq = 200
+args.save_freq = 200 #200 usually
 args.mode_draw = False
 
 """ Validate the setting. """

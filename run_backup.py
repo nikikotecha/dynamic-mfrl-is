@@ -3,8 +3,7 @@ import sys
 import time
 
 import numpy as np
-
-from networks import Networks
+from networks_backup import Networks
 from parsed_args_ssd import args
 #from sequential_social_dilemma_games.social_dilemmas.envs.cleanup import CleanupEnvMultiType, CleanupEnvReward
 #from sequential_social_dilemma_games.social_dilemmas.envs.harvest import HarvestEnvReward
@@ -104,7 +103,7 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
         # Add one-transition sample to samples if is_train=True.
         if is_train:
             samples[i] = (obs, act, act_probs, rew, m_act, n_obs, fea, beta)
-            print("act_probs: ", act_probs)
+#            print("act_probs: ", act_probs)
 
         # Update collective_reward and collective_feature for each type.
         for idx, agent_id in enumerate(agent_ids):
@@ -295,3 +294,9 @@ if __name__ == "__main__":
                                           },
                                 path=saved_path,
                                 name=filename)
+            """if i == 17999:
+                b_file = saved_path + str(i).zfill(9) + '.pkl'
+                with open(b_file, 'wb') as f:
+                    pickle.dump(buffer, f)"""
+
+            

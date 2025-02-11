@@ -336,7 +336,7 @@ class MFAP(nn.Module):
         hidden_dims: list
             Dimensions of hidden layers.
             ex. if hidden_dims = [128, 64, 32],
-                layer_dims = [[observation_size, 128], [128, 64], [64, 32], [32, action_size]].
+                layer_dims = [[observation_size + prev_mean_action, 128], [128, 64], [64, 32], [32, action_size]].
         """
         super().__init__()
         self.layers: nn.ModuleList = nn.ModuleList()
@@ -532,11 +532,15 @@ class Networks(object):
         self.critic, self.critic_target = self.get_network('critic')  # list, list
         self.psi, self.psi_target = self.get_network('psi')  # list, list
         self.mfp, self.mfp_target = self.get_network('mfp')  # list
+        self.mfap, self.mfap_target = self.get_network('mfap')  # list
+
         self.reuse_networks()
         self.actor_opt, self.actor_skd = self.get_opt_and_skd('actor')  # list, list
         self.critic_opt, self.critic_skd = self.get_opt_and_skd('critic')  # list, list
         self.psi_opt, self.psi_skd = self.get_opt_and_skd('psi')  # list, list
         self.mfp_opt, self.mfp_skd = self.get_opt_and_skd('mfp')  # list, list
+        self.mfap_opt, self.mfap_skd = self.get_opt_and_skd('mfap')  # list, list
+
         self.connections = env.connections
         self.node_names = env.node_names
 
@@ -573,6 +577,8 @@ class Networks(object):
         is_critic = (not self.args.mode_psi and mode == 'critic')
         is_psi = (self.args.mode_psi and mode == 'psi')
         is_mfp  = (self.args.mode_mfp and mode == 'mfp')
+        is_mfap = (self.args.mode_mfap and mode == 'mfap')
+
         for agent_type in range(self.num_types):
             net = None
             if is_actor:
@@ -598,6 +604,10 @@ class Networks(object):
                           mean_action_size=self.mean_action_size,
                           hidden_dims=self.args.h_dims_m)
                 net.apply(init_weights)
+            if is_mfap:
+                net = MFAP(observation_size=self.observation_size,
+                           mean_action_size=self.mean_action_size,
+                           hidden_dims=self.args.h_dims_mfap)
             network.append(net)
         network_target = copy.deepcopy(network)
         return network, network_target
@@ -609,6 +619,7 @@ class Networks(object):
         is_critic = (not self.args.mode_psi and mode == 'critic')
         is_psi = (self.args.mode_psi and mode == 'psi')
         is_mfp = (self.args.mode_mfp and mode == 'mfp')
+        is_mfap = (self.args.mode_mfap and mode == 'mfap')
         for agent_type in range(self.num_types):
             opt = None
             skd = None
@@ -619,7 +630,9 @@ class Networks(object):
             if is_psi:
                 opt = optim.Adam(self.psi[agent_type].parameters(), lr=self.args.lr_p)
             if is_mfp:
-                opt = optim.Adam(self.mfp[agent_type].parameters(), lr=self.args.lr_p)
+                opt = optim.Adam(self.mfp[agent_type].parameters(), lr=self.args.lr_m)
+            if is_mfap:
+                opt = optim.Adam(self.mfap[agent_type].parameters(), lr=self.args.lr_mfap)
             
             if self.args.mode_lr_decay and (is_actor or is_psi or is_critic or is_mfp):  # opt is not None
                 skd = optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.999)
@@ -724,7 +737,7 @@ class Networks(object):
             idx = 0
             for agent_type in range(self.num_types):
                 obs_input = tensors['obs'][agent_type]  # obs_input = (n_t, observation_size)
-                m_act_input = tensors['m_act'][agent_type]  # action_type별 tensor 존재
+                m_act_input = tensors['m_act'][agent_type]  # action_type tensor (n_t, action_size)
                 beta_input = tensors['beta'][agent_type]
                 # TODO: check whether mode_ac and mode_psi properly work.
                 if self.args.mode_ac:  # based on actor.
@@ -983,17 +996,20 @@ class Networks(object):
         psi_loss: list
         critic_loss: list
         """
-        actor_loss, psi_loss, critic_loss = [None for _ in range(3)]
+        actor_loss, psi_loss, critic_loss , mfp_loss, mfap_loss= [None for _ in range(5)]
         if self.args.mode_ac:
             actor_loss = self.calculate_actor_loss(tensors)
         if self.args.mode_psi:
             psi_loss = self.calculate_psi_loss(tensors)
-        if self.args.mode_mfp:
-            mfp_loss = self.calculate_mfp_loss(tensors)
         else:
             critic_loss = self.calculate_critic_loss(tensors)
+        
+        if self.args.mode_mfp:
+            mfp_loss = self.calculate_mfp_loss(tensors)
+        if self.args.mode_mfap:
+            mfap_loss = self.calculate_mfap_loss(tensors)
 
-        return actor_loss, psi_loss, critic_loss
+        return actor_loss, psi_loss, critic_loss, mfp_loss, mfap_loss
 
     def calculate_actor_loss(self, tensors):
         """
@@ -1077,7 +1093,48 @@ class Networks(object):
         
         return mfp_loss
 
+    def calculate_mfap_loss(self, tensors):
+        """
+        Calculate mfap loss.
+        
+        Parameters
+        ----------
+        tensors: dict
+        
+        Returns
+        -------
+        mfp_loss: list
+        """
+        mfap_loss = []
+        obs: list = tensors['obs']
+        act: list = tensors['act']
+        m_act: list = tensors['m_act']
+        n_obs: list = tensors['n_obs']
+        fea: list = tensors['fea']
+        beta: list = tensors['beta']
 
+        self.loss_fn = nn.MSELoss()
+
+        for agent_type in range(self.num_types):
+            with torch.no_grad():
+                # Get mfp values of next observations from the mfap target network.
+                mfap_input = torch.stack(n_obs[agent_type], m_act[agent_type])
+                mfap_target_n = self.mfap_target[agent_type](mfap_input)
+                # Get MFP prediction using the current network based on current observation
+            mfap_pred = self.mfap[agent_type](torch.stack(obs[agent_type], m_act[agent_type]))
+
+            m_act_tensor = torch.stack([sub_list if isinstance(sub_list, torch.Tensor) else torch.tensor(sub_list, dtype=torch.float32) for sub_list in m_act[agent_type]], dim=1)
+            m_act_tensor = m_act_tensor.squeeze(-1)
+
+
+            # Calculate the loss using Mean Squared Error (MSE), using m_act as the label
+            loss = self.loss_fn(mfap_pred, m_act_tensor)
+            
+
+            # Store the loss
+            mfap_loss.append(loss)
+        
+        return mfap_loss
 
     def calculate_psi_loss(self, tensors):
         """
@@ -1184,21 +1241,21 @@ class Networks(object):
                     sum_behaviour = []
                     sum_current = []
                     for i in indices: 
-                        print("act_probs", act_probs[agent_type][buffer_idx])
-                        print("log_probs_target_all", log_probs_target_all[i][buffer_idx])
+                        #print("act_probs", act_probs[agent_type][buffer_idx])
+                        #print("log_probs_target_all", log_probs_target_all[i][buffer_idx])
                         sum_behaviour.append(act_probs[i][buffer_idx])
                         sum_current.append(log_probs_target_all[i][buffer_idx])
                     log_prob_mean_action_behavior.append(np.sum(sum_behaviour))
                     log_prob_mean_action_current.append(np.sum(sum_current))
-                    print("log_prob_mean_action_behavior", log_prob_mean_action_behavior, log_prob_mean_action_current)
+                    #print("log_prob_mean_action_behavior", log_prob_mean_action_behavior, log_prob_mean_action_current)
             
 
         for agent_type in range(self.num_types):
             #importance_weights = log_prob_mean_action_current/log_prob_mean_action_behavior
             importance_weights1 = torch.tensor(log_prob_mean_action_current) - torch.tensor(log_prob_mean_action_behavior)
-            print("pre exp importance_weights", importance_weights1)
+            #print("pre exp importance_weights", importance_weights1)
             importance_weights = torch.exp(importance_weights1)
-            print("importance_weights", importance_weights)
+            #print("importance_weights", importance_weights)
             importance_weights = torch.clamp(importance_weights, min = 0, max=20)
 
             v_target_n = torch.sum(q_target_n * torch.exp(log_probs_target_n), dim=-1, keepdim=True)
@@ -1212,8 +1269,8 @@ class Networks(object):
 
             #q = q[torch.arange(q.size(0)), act[agent_type]].view(-1, 1)
             if self.args.mode_is:
-                print("q", q)
-                print("v_target_n", v_target_n)
+                #print("q", q)
+                #print("v_target_n", v_target_n)
                 loss = importance_weights * (rew[agent_type] + self.args.gamma * v_target_n - q) ** 2
             else:
                 loss = (rew[agent_type] + self.args.gamma * v_target_n - q) ** 2
@@ -1233,7 +1290,7 @@ class Networks(object):
                                   n_obs_t=n_obs_t,
                                   fea_t=fea_t,
                                   beta_t=beta_t)
-        actor_loss, psi_loss, critic_loss = self.calculate_losses(tensors)
+        actor_loss, psi_loss, critic_loss, mfp_loss, mfap_loss = self.calculate_losses(tensors)
         for agent_type in range(self.num_types):
             if self.args.mode_ac:  # actor
                 self.actor_opt[agent_type].zero_grad()
@@ -1263,6 +1320,13 @@ class Networks(object):
                 torch.nn.utils.clip_grad_norm_(self.mfp[agent_type].parameters(), max_grad_norm)
                 self.mfp_opt[agent_type].step()
                 self.mfp_skd[agent_type].step() if self.args.mode_lr_decay else None
+            if self.args.mode_mfap:  # mfap
+                self.mfap_opt[agent_type].zero_grad()
+                mfap_loss[agent_type].backward()
+                max_grad_norm = 1
+                torch.nn.utils.clip_grad_norm_(self.mfap[agent_type].parameters(), max_grad_norm)
+                self.mfap_opt[agent_type].step()
+                self.mfap_skd[agent_type].step() if self.args.mode_lr_decay else None
             else:  # critic
                 self.critic_opt[agent_type].zero_grad()
                 critic_loss[agent_type].backward()
@@ -1281,5 +1345,9 @@ class Networks(object):
             self.update_target_network(self.actor, self.actor_target)
         if self.args.mode_psi:
             self.update_target_network(self.psi, self.psi_target)
+        if self.args.mode_mfp:
+            self.update_target_network(self.mfp, self.mfp_target)
+        if self.args.mode_mfap:
+            self.update_target_network(self.mfap, self.mfap_target)
         else:
             self.update_target_network(self.critic, self.critic_target)
