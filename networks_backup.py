@@ -221,6 +221,7 @@ class Critic(nn.Module):
         x = self.layers[0](observation)
         x = F.relu(x)
         m_act = copy.deepcopy(mean_action)
+        print(m_act, type(m_act))        
         m_act.insert(0, x)
         x = torch.cat(m_act, dim=-1)
         for i in range(1, self.num_layers):
@@ -307,14 +308,19 @@ class MFP(nn.Module):
             The shape will be (N, mean_action_size).
             ex. action_size = 6.
         """
+        print(observation)
         x = self.layers[0](observation)
         x = F.relu(x)
         for i in range(1, self.num_layers):
             x = self.layers[i](x)
             if i < self.num_layers - 1:
                 x = F.relu(x)
-
-        return x
+        print(x)
+        m_act =[]
+        for i in range(x.shape[1]):
+            m_act_i = x[:, i:i+1]
+            m_act.append(m_act_i)
+        return m_act
 
 
 class MFAP(nn.Module):
