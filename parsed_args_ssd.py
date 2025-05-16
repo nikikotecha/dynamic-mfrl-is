@@ -112,11 +112,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("device: ", device)
 args.device = device
 """ Setting for the description. """
-args.description = 'mfp_k=300_lr_m = 0.0001'
-args.setting_name = 'test'+utils_all.get_current_time_tag()+'mfp_k=300_lr_m = 0.0001'
+args.description = 'mf_100_restart2'
+args.setting_name = 'test'+utils_all.get_current_time_tag()+'mf_100_restart2'
 args.env = 'cleanup_multi_type_regular'
 args.num_types = 1
-args.num_agents = [50]
+args.num_agents = [100]
 args.rew_clean = 0.05
 args.rew_harvest = 0.95
 
@@ -141,7 +141,7 @@ args.h_dims_mfap = [256, 128, 64, 32]
 args.lr_a = 0.0001
 args.lr_c = 0.001
 args.lr_p = 0.001
-args.lr_m = 0.0001
+args.lr_m = 0.001
 args.lr_mfap = 0.001
 args.gamma = 0.99
 

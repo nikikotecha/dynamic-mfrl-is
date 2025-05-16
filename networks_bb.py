@@ -313,11 +313,8 @@ class MFP(nn.Module):
             x = self.layers[i](x)
             if i < self.num_layers - 1:
                 x = F.relu(x)
-        m_act =[]
-        for i in range(x.shape[1]):
-            m_act_i = x[:, i:i+1]
-            m_act.append(m_act_i)
-        return m_act
+
+        return x
 
 
 class MFAP(nn.Module):
@@ -550,7 +547,7 @@ class Networks(object):
         self.connections = env.connections
         self.node_names = env.node_names
         self.adjacency = env.adjacency
-    
+
     def get_observation_size(self, env: Union[MultiAgentInvManagementDiv]) -> int:
         if self.args.mode_one_hot_obs:
             observation_size = np.prod(env.observation_space.shape) * self.observation_num_classes
@@ -1004,13 +1001,12 @@ class Networks(object):
             actor_loss = self.calculate_actor_loss(tensors)
         if self.args.mode_psi:
             psi_loss = self.calculate_psi_loss(tensors)
-        else:
-            critic_loss = self.calculate_critic_loss(tensors)
-        
         if self.args.mode_mfp:
             mfp_loss = self.calculate_mfp_loss(tensors)
         if self.args.mode_mfap:
             mfap_loss = self.calculate_mfap_loss(tensors)
+        else:
+            critic_loss = self.calculate_critic_loss(tensors)
 
         return actor_loss, psi_loss, critic_loss, mfp_loss, mfap_loss
 
@@ -1082,14 +1078,12 @@ class Networks(object):
                 mfp_target_n = self.mfp_target[agent_type](n_obs[agent_type])
                 # Get MFP prediction using the current network based on current observation
             mfp_pred = self.mfp[agent_type](obs[agent_type])
-            mfp_pred = torch.stack([sub_tensor.squeeze(-1) if isinstance(sub_tensor, torch.Tensor) else torch.tensor(sub_tensor, dtype=torch.float32).squeeze(-1)
-                            for sub_tensor in m_act[agent_type]], dim=1)
+
             m_act_tensor = torch.stack([sub_list if isinstance(sub_list, torch.Tensor) else torch.tensor(sub_list, dtype=torch.float32) for sub_list in m_act[agent_type]], dim=1)
             m_act_tensor = m_act_tensor.squeeze(-1)
-            # Calculate the loss using Mean Squared Error (MSE), using m_act as the label
-            mfp_pred.requires_grad_()
-            m_act_tensor.requires_grad_()
 
+
+            # Calculate the loss using Mean Squared Error (MSE), using m_act as the label
             loss = self.loss_fn(mfp_pred, m_act_tensor)
             
 
@@ -1305,7 +1299,6 @@ class Networks(object):
 
                 actor_loss[agent_type].backward()
                 max_grad_norm = 1
-                #max_grad_norm = 0.5
                 torch.nn.utils.clip_grad_norm_(self.actor[agent_type].parameters(), max_grad_norm)
                 
                 for name, param in self.actor[agent_type].named_parameters():
@@ -1321,36 +1314,15 @@ class Networks(object):
                 self.psi_skd[agent_type].step() if self.args.mode_lr_decay else None
             if self.args.mode_mfp:  # mfp
                 self.mfp_opt[agent_type].zero_grad()
-
-                if torch.isnan(mfp_loss[agent_type]).any():
-                    print("NaN detected in loss before backwards")
-
-                print("Loss requires_grad:", mfp_loss[agent_type].requires_grad)
-
                 mfp_loss[agent_type].backward()
-                print("Loss requires_grad2:", mfp_loss[agent_type].requires_grad)
                 max_grad_norm = 1
-                #max_grad_norm = 0.5 
                 torch.nn.utils.clip_grad_norm_(self.mfp[agent_type].parameters(), max_grad_norm)
-                print("clip grad norm")
-                for param in self.mfp[agent_type].parameters():
-                    print("param grad",param.requires_grad)  # Should be True
-    
-                for param in self.mfp[agent_type].parameters():
-                    if param.grad is None:
-                        print(f"Parameter: {param}")
-                        print("Gradient is None")
-                    else:
-                        print(f"Parameter: {param}")
-                        print(f"Gradient: {param.grad}")
-
                 self.mfp_opt[agent_type].step()
                 self.mfp_skd[agent_type].step() if self.args.mode_lr_decay else None
             if self.args.mode_mfap:  # mfap
                 self.mfap_opt[agent_type].zero_grad()
                 mfap_loss[agent_type].backward()
                 max_grad_norm = 1
-                #max_grad_norm = 0.5
                 torch.nn.utils.clip_grad_norm_(self.mfap[agent_type].parameters(), max_grad_norm)
                 self.mfap_opt[agent_type].step()
                 self.mfap_skd[agent_type].step() if self.args.mode_lr_decay else None
@@ -1358,7 +1330,6 @@ class Networks(object):
                 self.critic_opt[agent_type].zero_grad()
                 critic_loss[agent_type].backward()
                 max_grad_norm = 1
-                #max_grad_norm = 0.5
                 torch.nn.utils.clip_grad_norm_(self.critic[agent_type].parameters(), max_grad_norm)
                 self.critic_opt[agent_type].step()
                 self.critic_skd[agent_type].step() if self.args.mode_lr_decay else None

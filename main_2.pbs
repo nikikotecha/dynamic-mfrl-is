@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1:mem=300gb:ngpus=0
+#PBS -l walltime=00:05:00
+
+cd $PBS_O_WORKDIR
+
+ml tools/prod
+#ml PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
+ml PyTorch/2.1.2-foss-2023a
+ml Gymnasium/0.29.1-foss-2023a
+ml matplotlib/3.7.2-gfbf-2023a
+echo $pwd
+
+python run_backup.py

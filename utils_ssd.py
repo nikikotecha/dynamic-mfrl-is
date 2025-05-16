@@ -151,7 +151,7 @@ def save_data(args, env, networks, explore_params, episode_trained, time_trained
     critic_opt_params: list = []
     psi_params: list = []
     psi_opt_params: list = []
-    for agent_type in range(args.num_types):
+    for agent_type in range(env.num_types):
         actor_param = networks.actor[agent_type].state_dict() if args.mode_ac else None
         actor_opt_param = networks.actor_opt[agent_type].state_dict() if args.mode_ac else None
         psi_param = networks.psi[agent_type].state_dict() if args.mode_psi else None
@@ -178,6 +178,8 @@ def save_data(args, env, networks, explore_params, episode_trained, time_trained
         'time_trained': time_trained,
         'outcomes': outcomes,
     }, path + name)
+
+
 
 
 def draw_or_save_plt(col_rews, col_rews_test, objs, objs_test, i=0, mode='draw', filename=''):

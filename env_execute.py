@@ -29,24 +29,16 @@ class MultiAgentInvManagementDiv():
         # Structure
         self.independent = config.get("independent", True)
         self.share_network = config.get("share_network", False)
-        self.num_nodes = config.get("num_nodes", 10)
+        self.num_nodes = config.get("num_nodes", 5)
         self.num_products = config.get("num_products", 10)
         self.node_names = []
         for i in range(self.num_nodes):
             for p in range(self.num_products):
                 node_name = "node_" + str(i) + str(p)
                 self.node_names.append(node_name)
-        #{0: [1], 1: [2,3], 2: [4], 3:[5,6], 4:[], 5:[], 6:[]} 7 nodes 10 products = 70 agents
-        #{0: [1], 1: [2,3], 2: [4], 3:[], 4:[5], 5:[]} 6 nodes 5 products = [30 agents part 1]
-        #{0: [1], 1: [2,3], 2: [4], 3:[], 4:[]} 5 nodes 10 products = 50 agents (this one for 20 agents too)
-        #{0: [1], 1: [2,3], 2: [4], 3:[5,6], 4:[7], 5:[], 6:[], 7:[]} 8 nodes 10 producs = 80 agents
-        #{0: [1], 1: [2,3], 2: [4], 3:[7,8], 4:[5,6], 5:[], 6:[], 7:[9], 8:[], 9:[]} 10 nodes 3 products = [30 agents part 2] -- this one works !!! 
-
-        #{ 0: [1, 2], 1: [3, 4], 2: [5, 6], 3: [7, 8], 4: [9], 5: [10], 6: [], 
-        # 7: [11, 12, 13], 8: [12], 9: [14], 10: [15], 11: [16, 17], 12: [], 13: [17], 14: [17, 18], 15: [19], 16: [20], 17: [20, 21], 18: [22], \
-        # 19: [22, 23], 20: [], 21: [], 22: [], 23: [24], 24:[]} 25 nodes 4 products = [100 products]
-        #self.connections = config.get("connections", {0: [1], 1: [2, 3], 2: [4], 3: [5], 4: [6, 7], 5: [], 6: [8], 7: [], 8: [9], 9: []}) new 30 agents one
-        self.connections = config.get("connections", {0: [1], 1: [2,3], 2: [4], 3:[7,8], 4:[5,6], 5:[], 6:[], 7:[9], 8:[], 9:[]})
+        #{0: [1], 1: [2,3], 2: [4], 3:[5,6], 4:[], 5:[], 6:[]}
+        #{0: [1], 1: [2,3], 2: [4], 3:[], 4:[]}
+        self.connections = config.get("connections",{0: [1], 1: [2,3], 2: [4], 3:[], 4:[]})
         self.network = create_network(self.connections)
         self.adjacency = create_adjacency_matrix(self.connections, self.num_nodes, self.num_products)
         self.order_network = np.transpose(self.network)
@@ -813,15 +805,7 @@ class MultiAgentInvManagementDiv():
                 meta_info['acquisition'] = self.acquisition[t, i, p]
                 meta_info['actual order'] = self.order_r[t, i, p]
                 meta_info['profit'] = profit[i]
-                meta_info['backlog'] = self.backlog[t, i]
-                meta_info['inventory'] = self.inv[t, i]
                 info[node] = meta_info
-        total_backlog = sum(node_info['backlog'] for node_info in info.values())
-        total_inventory = sum(node_info['inventory'] for node_info in info.values())
-        total_profit = sum(node_info['profit'] for node_info in info.values())
-        info['total_backlog'] = total_backlog
-        info['overall_profit'] = total_profit
-        info['total_inventory'] = total_inventory
 
         #TODO: adding feature space for future use. currently a dummy 
         fea = self.state.copy()
@@ -830,7 +814,7 @@ class MultiAgentInvManagementDiv():
             if not isinstance(value, np.ndarray):
                 raise TypeError(f"Value for key '{key, value}' is not a NumPy array. Value type: {type(value)}")
 """
-        return self.state, action_dict, rewards, self.action_mean, upd_state, fea
+        return self.state, action_dict, rewards, self.action_mean, upd_state, fea, info
 
     def get_rewards(self):
         rewards = {}
@@ -964,7 +948,7 @@ class MultiAgentInvManagementDiv():
         for i in range(env.num_nodes):
             for p in range(env.num_products):
                 action_dict['node_' + str(i) + str(p)] = np.random.uniform(env.a, env.b)
-        state, action_dict, rewards, action_mean, upd_state, fea , info= env.step(action_dict)
+        state, action_dict, rewards, action_mean, upd_state, fea  = env.step(action_dict)
 
 test()
 print('Done')"""
