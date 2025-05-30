@@ -12,18 +12,13 @@ from env_execute import MultiAgentInvManagementDiv
 import utils_all
 import utils_ssd
 import torch 
+import os 
 import json 
-
-"""
-Notes: You will run this 'main_ssd.py' file but you should change settings in 'parsed_args_ssd.py'
-"""
-
+from collections import defaultdict
 
 GREEDY_BETA = 0.001
-
-base_path = "/rds/general/user/nk3118/home/mfmarl-1/results_ssd/mf_100_restart2_nn/saved/"
-base_num = "000007399.tar"
-print_statement = "100_mf"
+file_path = "/rds/general/user/nk3118/home/mfmarl-1/results_ssd/is_30_2_nn/saved/"
+file_num = "000029999.tar"
 
 def load_data(path, name, networks, env):
     """
@@ -53,129 +48,136 @@ def load_data(path, name, networks, env):
             networks.critic_target[agent_type].load_state_dict(checkpoint['critic'][agent_type])
     return checkpoint['args'], checkpoint['explore_params'], checkpoint['episode_trained'], checkpoint['time_trained'], checkpoint['outcomes']
 
+
+def convert_np(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: convert_np(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_np(i) for i in obj]
+    else:
+        return obj
+
 def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_draw=False, is_train=True):
-    """
-    Run the simulation over epi_length and get samples from it.
-
-    Parameters
-    ----------
-    networks: Networks
-    env: CleanupEnvMultiType | CleanupEnvReward | HarvestEnvReward
-    args: argparse.Namespace
-    init_set: dict
-        init_set = {'obs': dict, 'm_act': list of dict}
-    epi_num: int
-    explore_params: dict
-    paths: list
-    is_draw: bool
-    is_train: bool
-
-    Returns
-    ----------
-    samples: list
-        List of samples which are tuples.
-        Length of samples will be the epi_length.
-        ex. [(obs, act, rew, m_act, fea), (obs, act, rew, m_act, fea), ...]
-    init_set: dict
-    collective_reward: list[float]
-        Collective reward of this episode.
-    collective_feature: list[np.ndarray]
-        Collective feature of this episode.
-        This is used for calculating total_incentives and total_penalties.
-        ex. np.array([x, y])
-    """
     image_path, video_path, saved_path = paths
-
     epi_length = args.episode_length
     fps = args.fps
     num_types = env.num_types
 
-    #agent_ids = list(env.node_names.keys())
     agent_ids = env.node_names
-    agent_types = list(env.agent_types.values())  # env.agents_types = {agent_id: int}
-    prev_steps = 0  # epi_num * epi_length
+    agent_types = list(env.agent_types.values())
+
+    prev_steps = 0
     samples = [None] * epi_length
     collective_reward = [0 for _ in range(num_types)]
     collective_feature = [np.zeros(np.prod(env.observation_space.shape)) for _ in range(num_types)]
 
-    obs = init_set['obs']  # Initial observations.
-    prev_m_act = init_set['m_act']  # Initial previous mean actions which is only used for Boltzmann policy.
-    
+    obs = init_set['obs']
+    prev_m_act = init_set['m_act']
+
     all_infos = []
     all_profits = []
     all_backlog = []
     all_inv = []
 
-    # Run the simulation (or episode).
+    actions_dict = {agent_id: [] for agent_id in agent_ids}
+    log_probs_dict = {agent_id: [] for agent_id in agent_ids}
+    mean_actions_dict = {f"type_{i}": [] for i in range(num_types)}
+    obs_dict = {agent_id: [] for agent_id in agent_ids}
+
     for i in range(epi_length):
-        # Select actions.
         epsilon = explore_params['epsilon']
         beta = explore_params['beta']
         if args.mode_ac:
             rand_prob = np.random.rand(1)[0]
             if is_train and rand_prob < epsilon:
-                act = {agent_id: np.random.uniform(low=env.action_space.low, high=env.action_space.high, size=env.action_space.shape) for agent_id in agent_ids}                
+                act = {agent_id: np.random.uniform(low=env.action_space.low,
+                                                   high=env.action_space.high,
+                                                   size=env.action_space.shape) for agent_id in agent_ids}
                 low = env.action_space.low
                 high = env.action_space.high
                 pdf_value = 1 / (high - low)
                 if pdf_value == 0:
-                    pdf_value = 0 + 1e-8 #ensures non zero, undefined value
-
+                    pdf_value = 1e-8
                 act_probs = {agent_id: np.log(pdf_value) for agent_id in agent_ids}
             else:
-                act, act_probs = networks.get_actions(obs, prev_m_act, GREEDY_BETA, is_target=False)  # beta will not do anything here.
-        else:  # Boltzmann policy using Q value based on critic or psi.
+                act, act_probs = networks.get_actions(obs, prev_m_act, GREEDY_BETA, is_target=False)
+        else:
             if is_train:
                 act, act_probs = networks.get_actions(obs, prev_m_act, beta, is_target=False)
             else:
                 act, act_probs = networks.get_actions(obs, prev_m_act, GREEDY_BETA, is_target=False)
 
-        # Save the image.
         if is_draw:
             if i == 0:
                 print("Run the episode with saving figures...")
             filename = image_path + "frame" + str(prev_steps + i).zfill(9) + ".png"
             env.render(filename=filename, i=prev_steps + i, epi_num=epi_num, act_probs=act_probs)
 
-        # Step
-        obs, act, rew, m_act, n_obs, fea, infos = env.step(act)
+        n_obs, act, rew, m_act, n_obs, fea, infos = env.step(act)
         all_infos.append(infos)
         all_profits.append(infos['overall_profit'])
         all_backlog.append(infos['total_backlog'])
         all_inv.append(infos['total_inventory'])
 
+        for agent_id in agent_ids:
+            if isinstance(act[agent_id], float):
+                actions_dict[agent_id].append(act[agent_id])  # Just append the scalar
+            else:
+                actions_dict[agent_id].append(act[agent_id].tolist())
+            log_probs_dict[agent_id].append(act_probs[agent_id] if isinstance(act_probs[agent_id], float)
+                                            else float(act_probs[agent_id]))
+            obs_dict[agent_id].append(obs[agent_id].tolist())
 
-        # Add one-transition sample to samples if is_train=True.
+        for type_id in range(num_types):
+            val = m_act[type_id]
+            if isinstance(val, (np.ndarray, list)):
+                mean_actions_dict[f"type_{type_id}"].append(val.tolist() if hasattr(val, "tolist") else val)
+            else:
+                # assume val is dict or scalar, append as is
+                mean_actions_dict[f"type_{type_id}"].append(val)
+
         if is_train:
             samples[i] = (obs, act, act_probs, rew, m_act, n_obs, fea, beta)
-            #print("act_probs: ", act_probs)
 
-        # Update collective_reward and collective_feature for each type.
         for idx, agent_id in enumerate(agent_ids):
             agent_type = agent_types[idx]
             collective_reward[agent_type] += rew[agent_id]
             collective_feature[agent_type] += fea[agent_id]
 
-        sys.stdout.flush()
-
-        # Update obs and prev_m_act for the next step.
         obs = n_obs
         prev_m_act = m_act
 
-        # Save the last image.
         if is_draw and i == epi_length - 1:
             act_probs = {agent_ids[j]: "End" for j in range(len(agent_ids))}
             filename = image_path + "frame" + str(prev_steps + i + 1).zfill(9) + ".png"
             env.render(filename=filename, i=prev_steps + i + 1, epi_num=epi_num, act_probs=act_probs)
 
-    # Save the video.
-    #utils_ssd.make_video(is_train, epi_num, fps, video_path, image_path) if is_draw else None
+    rollout_data = {
+        "episode": epi_num,
+        "collective_reward": collective_reward,
+        "collective_feature": [cf.tolist() for cf in collective_feature],
+        "profits": all_profits,
+        "backlog": all_backlog,
+        "inventory": all_inv,
+        "actions": actions_dict,
+        "action_log_probs": log_probs_dict,
+        "mean_actions": mean_actions_dict,
+        "observations": obs_dict
+    }
 
-    # Reset the environment after roll_out.
-    
+    rollout_data = convert_np(rollout_data)
+
+    json_path = os.path.join(saved_path, f"rollout_episode_{epi_num}.json")
+    with open(json_path, "w") as f:
+        json.dump(rollout_data, f, indent=2)
+
+
     init_set: dict = env.reset()
 
     return samples, init_set, collective_reward, collective_feature, all_infos, all_profits, all_backlog, all_inv
+
 
 if __name__ == "__main__":
     # Seed setting.
@@ -187,15 +189,14 @@ if __name__ == "__main__":
     # Build networks
     networks = Networks(env, args)
 
-    #args_, explore_params, episode_trained, time_trained, outcome=load_data('/rds/general/user/nk3118/home/mfmarl-1/results_ssd/is_50agents_k=300v2_restart/saved/', '000009999.tar', networks)
-    args_, explore_params, episode_trained, time_trained, outcome=load_data(base_path, base_num, networks, env)
+    args_, explore_params, episode_trained, time_trained, outcome=load_data(file_path, file_num, networks, env)
     epsilon = explore_params['epsilon']
     beta = explore_params['beta']
 
     # Build paths for saving images.
     path, image_path, video_path, saved_path = utils_ssd.make_dirs(args)
     paths = [image_path, video_path, saved_path]
-    args.num_episodes = 20 
+    args.num_episodes = 100
     # Metrics
     collective_rewards, collective_rewards_test = [np.zeros([args.num_types, args.num_episodes]) for _ in range(2)]
     total_penalties, total_penalties_test = [np.zeros(args.num_episodes) for _ in range(2)]
@@ -208,13 +209,12 @@ if __name__ == "__main__":
 
     # Buffer
     buffer = []
-    #buffer = dump_buffer('/rds/general/user/nk3118/home/mfmarl-1/results_ssd/test_250131_191530k_k300/saved/000002399.pkl')
     av_infos = []
     av_profits = []
     av_backlog =[]
     av_inv = []
     # Run
-    for i in range(20):
+    for i in range(args.num_episodes):
         # Option for visualization.
         #is_draw = (True and args.mode_draw) if (i == 0 or (i + 1) % args.save_freq == 0) else False
         is_draw = False
@@ -264,25 +264,5 @@ if __name__ == "__main__":
     print(f"Average Inventory : {average_inv}")
     print(f"Standard Deviation Inventory : {std_deviation_inv}")
 
-    # Save the results.
-    metrics = {
-        "collective_rewards_test": collective_rewards_test,
-        "backlog":{"average_backlog": average_backlog, "std_deviation_backlog": std_deviation_backlog, "median_backlog": median_backlog},
-        "inventory": {"average_inv": average_inv, "std_deviation_inv": std_deviation_inv},
-    }
 
-    def convert_np(obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, dict):
-            return {k: convert_np(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [convert_np(i) for i in obj]
-        else:
-            return obj
-    metrics = convert_np(metrics)
-    output_file = print_statement +"_metrics_results.json"
-    with open(output_file, "w") as json_file:
-        json.dump(metrics, json_file, indent=4)
-
-    print(f"Metrics saved to {output_file}")
+    

@@ -1,5 +1,5 @@
 # Ignore everything in the results_ssd folder
-#results_ssd/
+results_ssd/
 
 # Ignore all .pbs files
 
@@ -12,3 +12,6 @@ archive/
 main.pbs.*
 __pycache__/
 *.png
+mainpbs archive eqm/
+mainpbs files archive/
+figs/

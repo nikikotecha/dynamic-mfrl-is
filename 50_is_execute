@@ -1,0 +1,104 @@
+
+# conda environments:
+#
+base                  *  /rds/general/user/nk3118/home/anaconda3
+mf_new                   /rds/general/user/nk3118/home/anaconda3/envs/mf_new
+mfmarl                   /rds/general/user/nk3118/home/anaconda3/envs/mfmarl
+mfmarll                  /rds/general/user/nk3118/home/anaconda3/envs/mfmarll
+moea                     /rds/general/user/nk3118/home/anaconda3/envs/moea
+moea_clone               /rds/general/user/nk3118/home/anaconda3/envs/moea_clone
+morl                     /rds/general/user/nk3118/home/anaconda3/envs/morl
+morl4pc                  /rds/general/user/nk3118/home/anaconda3/envs/morl4pc
+parameters               /rds/general/user/nk3118/home/anaconda3/envs/parameters
+ss                       /rds/general/user/nk3118/home/anaconda3/envs/ss
+
+device:  cpu
+Agent type: 0
+Agent type: 1
+Agent type: 2
+Agent type: 3
+Agent type: 4
+Agent type: 5
+Agent type: 6
+Agent type: 7
+Agent type: 8
+Agent type: 9
+Agent type: 10
+Agent type: 11
+Agent type: 12
+Agent type: 13
+Agent type: 14
+Agent type: 15
+Agent type: 16
+Agent type: 17
+Agent type: 18
+Agent type: 19
+Agent type: 20
+Agent type: 21
+Agent type: 22
+Agent type: 23
+Agent type: 24
+Agent type: 25
+Agent type: 26
+Agent type: 27
+Agent type: 28
+Agent type: 29
+Agent type: 30
+Agent type: 31
+Agent type: 32
+Agent type: 33
+Agent type: 34
+Agent type: 35
+Agent type: 36
+Agent type: 37
+Agent type: 38
+Agent type: 39
+Agent type: 40
+Agent type: 41
+Agent type: 42
+Agent type: 43
+Agent type: 44
+Agent type: 45
+Agent type: 46
+Agent type: 47
+Agent type: 48
+Process : 0/20, Time : 15.85, Collective reward (all types) : 39117.00, Objective : 39117.00, Test
+Process : 1/20, Time : 31.50, Collective reward (all types) : 39239.50, Objective : 39239.50, Test
+Process : 2/20, Time : 47.31, Collective reward (all types) : 38457.50, Objective : 38457.50, Test
+Process : 3/20, Time : 63.16, Collective reward (all types) : 40281.50, Objective : 40281.50, Test
+Process : 4/20, Time : 79.16, Collective reward (all types) : 40091.50, Objective : 40091.50, Test
+Process : 5/20, Time : 95.28, Collective reward (all types) : 38264.00, Objective : 38264.00, Test
+Process : 6/20, Time : 111.44, Collective reward (all types) : 38805.00, Objective : 38805.00, Test
+Process : 7/20, Time : 127.64, Collective reward (all types) : 39348.50, Objective : 39348.50, Test
+Process : 8/20, Time : 143.89, Collective reward (all types) : 39890.00, Objective : 39890.00, Test
+Process : 9/20, Time : 160.17, Collective reward (all types) : 38611.00, Objective : 38611.00, Test
+Process : 10/20, Time : 176.50, Collective reward (all types) : 37217.00, Objective : 37217.00, Test
+Process : 11/20, Time : 192.92, Collective reward (all types) : 40651.50, Objective : 40651.50, Test
+Process : 12/20, Time : 209.33, Collective reward (all types) : 40204.00, Objective : 40204.00, Test
+Process : 13/20, Time : 225.82, Collective reward (all types) : 39753.50, Objective : 39753.50, Test
+Process : 14/20, Time : 242.42, Collective reward (all types) : 39012.00, Objective : 39012.00, Test
+Process : 15/20, Time : 259.11, Collective reward (all types) : 38793.00, Objective : 38793.00, Test
+Process : 16/20, Time : 276.16, Collective reward (all types) : 39678.50, Objective : 39678.50, Test
+Process : 17/20, Time : 294.05, Collective reward (all types) : 40811.00, Objective : 40811.00, Test
+Process : 18/20, Time : 312.19, Collective reward (all types) : 38282.00, Objective : 38282.00, Test
+Process : 19/20, Time : 330.32, Collective reward (all types) : 38345.50, Objective : 38345.50, Test
+[[39117.  39239.5 38457.5 40281.5 40091.5 38264.  38805.  39348.5 39890.
+  38611.  37217.  40651.5 40204.  39753.5 39012.  38793.  39678.5 40811.
+  38282.  38345.5]]
+[39242.675]
+[903.2339436]
+Average Backlog : 3895.5290410958905
+Standard Deviation Backlog : 1086.4877676686476
+Median Backlog : 3873.75
+Average Inventory : 2000.0
+Standard Deviation Inventory : 694.2861640711031
+Metrics saved to 50_is_metrics_results.json
+
+====================================
+CPU Time used: 00:05:05
+CPU Percent: 99%
+Memory usage: 677068kb
+Approx Power usage: 0.001
+Walltime usage: 00:06:21
+
+====================================

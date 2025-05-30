@@ -13,7 +13,21 @@ import torch
 
 GREEDY_BETA = 0.001
 
-def load_data(path, name, networks, env):
+file_path = "/rds/general/user/nk3118/home/mfmarl-1/results_ssd/test_250514_1451is_100_restart2/saved/"
+file_num = "000003799.tar"
+print_statement = "Eqm analysis:" + file_path + file_num
+print(print_statement)
+
+def random_choice(env):
+    """
+    Randomly choose one of the actor types to exclude.
+    This function is not used in the main code but can be useful for debugging or testing purposes.
+    """
+    excluded_actor = random.choice(range(env.num_types))
+    print(f"Excluded actor type: {excluded_actor}")
+    return excluded_actor
+
+def load_data(path, name, networks, env, excluded_actor):
     """
     Load saved data and update the networks.
 
@@ -25,9 +39,7 @@ def load_data(path, name, networks, env):
     args: argparse.Namespace
     """
     checkpoint = torch.load(path + name, map_location="cpu")  # Load onto CPU by default
-    
-    excluded_actor = random.choice(range(env.num_types))
-    print(f"Excluded actor type: {excluded_actor}")
+    print(len(checkpoint['actor']))
     # Restore network parameters
     if args.mode_ac:
         for agent_type in range(env.num_types):
@@ -39,12 +51,8 @@ def load_data(path, name, networks, env):
             networks.actor_target[agent_type].load_state_dict(checkpoint['actor'][agent_type])
             networks.critic_target[agent_type].load_state_dict(checkpoint['critic'][agent_type])
         
-    return networks
+    return networks, excluded_actor
 
-def random_choice(args, env):
-    agent_type_e = np.random.choice(args.num_types)
-    agent_name_e = env.node_names[agent_type_e]
-    return agent_type_e, agent_name_e
 
 def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_draw=False, is_train=True):
     """
@@ -93,9 +101,6 @@ def roll_out(networks, env, args, init_set, epi_num, explore_params, paths, is_d
 
     obs = init_set['obs']  # Initial observations.
     prev_m_act = init_set['m_act']  # Initial previous mean actions which is only used for Boltzmann policy.
-
-    #pick the one policy not to be fixed
-    agent_type_e, agent_name_e = random_choice(args, env)
 
     # Run the simulation (or episode).
     for i in range(epi_length):
@@ -172,9 +177,14 @@ if __name__ == "__main__":
     init_set = env.reset()
 
     # Build networks
-    networks = Networks(env, args)
-    args_, explore_params, episode_trained, time_trained, outcomes = load_data('/rds/general/user/nk3118/home/mfmarl-1/results_ssd/test_250124_203530k_k300/saved/', '000017999.tar', networks)
+    actor_excluded = random_choice(env)
+    args.excluded_agent = actor_excluded
+    networks_initial = Networks(env, args)
+    networks, actor_excluded_2 = load_data(file_path, file_num, networks_initial, env, actor_excluded)
 
+    if actor_excluded != actor_excluded_2:
+        raise ValueError(f"Actor excluded mismatch: {actor_excluded} != {actor_excluded_2}")
+    
     # Initial exploration probability.
     epsilon = args.epsilon
     beta = args.beta
@@ -203,8 +213,6 @@ if __name__ == "__main__":
 
     # Run
     for i in range(args.num_episodes):
-        # Option for visualization.
-        #is_draw = (True and args.mode_draw) if (i == 0 or (i + 1) % args.save_freq == 0) else False
         is_draw = False
         # Decayed exploration parameters.
         explore_params = utils_ssd.get_explore_params(explore_params, i, args)

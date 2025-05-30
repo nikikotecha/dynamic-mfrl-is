@@ -1,0 +1,154 @@
+
+# conda environments:
+#
+base                  *  /rds/general/user/nk3118/home/anaconda3
+mf_new                   /rds/general/user/nk3118/home/anaconda3/envs/mf_new
+mfmarl                   /rds/general/user/nk3118/home/anaconda3/envs/mfmarl
+mfmarll                  /rds/general/user/nk3118/home/anaconda3/envs/mfmarll
+moea                     /rds/general/user/nk3118/home/anaconda3/envs/moea
+moea_clone               /rds/general/user/nk3118/home/anaconda3/envs/moea_clone
+morl                     /rds/general/user/nk3118/home/anaconda3/envs/morl
+morl4pc                  /rds/general/user/nk3118/home/anaconda3/envs/morl4pc
+parameters               /rds/general/user/nk3118/home/anaconda3/envs/parameters
+ss                       /rds/general/user/nk3118/home/anaconda3/envs/ss
+
+device:  cpu
+Agent type: 0
+Agent type: 1
+Agent type: 2
+Agent type: 3
+Agent type: 4
+Agent type: 5
+Agent type: 6
+Agent type: 7
+Agent type: 8
+Agent type: 9
+Agent type: 10
+Agent type: 11
+Agent type: 12
+Agent type: 13
+Agent type: 14
+Agent type: 15
+Agent type: 16
+Agent type: 17
+Agent type: 18
+Agent type: 19
+Agent type: 20
+Agent type: 21
+Agent type: 22
+Agent type: 23
+Agent type: 24
+Agent type: 25
+Agent type: 26
+Agent type: 27
+Agent type: 28
+Agent type: 29
+Agent type: 30
+Agent type: 31
+Agent type: 32
+Agent type: 33
+Agent type: 34
+Agent type: 35
+Agent type: 36
+Agent type: 37
+Agent type: 38
+Agent type: 39
+Agent type: 40
+Agent type: 41
+Agent type: 42
+Agent type: 43
+Agent type: 44
+Agent type: 45
+Agent type: 46
+Agent type: 47
+Agent type: 48
+Agent type: 49
+Agent type: 50
+Agent type: 51
+Agent type: 52
+Agent type: 53
+Agent type: 54
+Agent type: 55
+Agent type: 56
+Agent type: 57
+Agent type: 58
+Agent type: 59
+Agent type: 60
+Agent type: 61
+Agent type: 62
+Agent type: 63
+Agent type: 64
+Agent type: 65
+Agent type: 66
+Agent type: 67
+Agent type: 68
+Agent type: 69
+Agent type: 70
+Agent type: 71
+Agent type: 72
+Agent type: 73
+Agent type: 74
+Agent type: 75
+Agent type: 76
+Agent type: 77
+Agent type: 78
+Agent type: 79
+Agent type: 80
+Agent type: 81
+Agent type: 82
+Agent type: 83
+Agent type: 84
+Agent type: 85
+Agent type: 86
+Agent type: 87
+Agent type: 88
+Agent type: 89
+Agent type: 90
+Agent type: 91
+Agent type: 92
+Agent type: 93
+Agent type: 94
+Agent type: 95
+Agent type: 96
+Agent type: 97
+Agent type: 98
+Process : 0/20, Time : 51.38, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 1/20, Time : 104.13, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 2/20, Time : 158.06, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 3/20, Time : 212.96, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 4/20, Time : 268.53, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 5/20, Time : 327.55, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 6/20, Time : 414.90, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 7/20, Time : 485.42, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 8/20, Time : 543.31, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 9/20, Time : 601.59, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 10/20, Time : 660.49, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 11/20, Time : 720.15, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 12/20, Time : 780.31, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 13/20, Time : 840.80, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 14/20, Time : 901.56, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 15/20, Time : 962.62, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 16/20, Time : 1024.08, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 17/20, Time : 1085.76, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 18/20, Time : 1170.61, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+Process : 19/20, Time : 1264.92, Collective reward (all types) : -38937.50, Objective : -38937.50, Test
+[[-38937.5 -38937.5 -38937.5 -38937.5 -38937.5 -38937.5 -38937.5 -38937.5
+  -38937.5 -38937.5 -38937.5 -38937.5 -38937.5 -38937.5 -38937.5 -38937.5
+  -38937.5 -38937.5 -38937.5 -38937.5]]
+[-38937.5]
+[0.]
+Average Backlog : 10478.221643835617
+Standard Deviation Backlog : 2564.5931815594863
+Median Backlog : 11000.0
+Average Inventory : 1000.0
+Standard Deviation Inventory : 1465.3588687812985
+Metrics saved to 100_mf_metrics_results.json
+
+====================================
+CPU Time used: 00:20:29
+CPU Percent: 99%
+Memory usage: 1160744kb
+Approx Power usage: 0.004
+Walltime usage: 00:21:51
+
+====================================

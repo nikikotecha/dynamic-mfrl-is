@@ -100,7 +100,9 @@ def add_default_args(parser):
     parser.add_argument("--importance_sampling", type=bool, default=True,
                         help="True if we use importance sampling for the critic loss calculation.")
     parser.add_argument("--device", type=str, default="cpu",
-                        help="Device for the training. 'cuda' or 'cpu' can be used.")    
+                        help="Device for the training. 'cuda' or 'cpu' can be used.")   
+    parser.add_argument("--eqm_analysis", type=bool, default=False,
+                        help="True if we do equilibrium analysis.") 
 
 
 
@@ -112,14 +114,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("device: ", device)
 args.device = device
 """ Setting for the description. """
-args.description = 'mf_100_restart2'
-args.setting_name = 'test'+utils_all.get_current_time_tag()+'mf_100_restart2'
+args.description = '100_mf_retry'
+args.setting_name = 'test'+utils_all.get_current_time_tag()+'100_mf_retry'
 args.env = 'cleanup_multi_type_regular'
 args.num_types = 1
 args.num_agents = [100]
 args.rew_clean = 0.05
 args.rew_harvest = 0.95
-
+args.eqm_analysis = True
 """ Setting for the reward designer's problem. """
 args.lv_penalty = 0.0
 args.lv_incentive = 0.0
@@ -129,8 +131,8 @@ args.mode_ac = True  # True if actor-critic/psi.
 args.mode_psi = False  # True if SF.
 args.mode_mfp = False  # True if MFP.
 args.mode_mfap = False # True if MFAP.
-args.mode_is = False # True if we use importance sampling for the critic loss calculation.
-args.importance_sampling = False # True if we use importance sampling for the critic loss calculation.
+args.mode_is = True # True if we use importance sampling for the critic loss calculation.
+args.importance_sampling = True # True if we use importance sampling for the critic loss calculation.
 
 args.h_dims_a = [256, 128, 64, 32]
 args.h_dims_c = [256, 128, 64, 32]

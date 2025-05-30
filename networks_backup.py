@@ -134,8 +134,21 @@ class Actor(nn.Module):
 
         pi_action = torch.tanh(pi_action)
         #pi_action = self.act_limit * pi_action
-        
+
         return pi_action, logp_pi
+    
+    def get_distribution_params(self, x):
+        for i in range(self.num_layers):
+            x = self.layers[i](x)
+            if i < self.num_layers - 1:
+                x = F.relu(x)
+        mean = self.mu_layer(x)
+        log_std = self.log_std_layer(x)
+        log_std = torch.clamp(log_std, self.LOG_STD_MIN, self.LOG_STD_MAX)
+        std = torch.exp(log_std)
+        std = torch.clamp(std, min=1e-6)
+        return mean, std
+
 
 
 
@@ -1297,6 +1310,11 @@ class Networks(object):
                                   beta_t=beta_t)
         actor_loss, psi_loss, critic_loss, mfp_loss, mfap_loss = self.calculate_losses(tensors)
         for agent_type in range(self.num_types):
+            if self.args.eqm_analysis: 
+                if agent_type != self.args.excluded_agent: 
+                    print("agent_type", agent_type)
+                    print("excluded_agent", self.args.excluded_agent)
+                    continue
             if self.args.mode_ac:  # actor
                 self.actor_opt[agent_type].zero_grad()
 

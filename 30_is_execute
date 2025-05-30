@@ -1,0 +1,84 @@
+
+# conda environments:
+#
+base                  *  /rds/general/user/nk3118/home/anaconda3
+mf_new                   /rds/general/user/nk3118/home/anaconda3/envs/mf_new
+mfmarl                   /rds/general/user/nk3118/home/anaconda3/envs/mfmarl
+mfmarll                  /rds/general/user/nk3118/home/anaconda3/envs/mfmarll
+moea                     /rds/general/user/nk3118/home/anaconda3/envs/moea
+moea_clone               /rds/general/user/nk3118/home/anaconda3/envs/moea_clone
+morl                     /rds/general/user/nk3118/home/anaconda3/envs/morl
+morl4pc                  /rds/general/user/nk3118/home/anaconda3/envs/morl4pc
+parameters               /rds/general/user/nk3118/home/anaconda3/envs/parameters
+ss                       /rds/general/user/nk3118/home/anaconda3/envs/ss
+
+device:  cpu
+Agent type: 0
+Agent type: 1
+Agent type: 2
+Agent type: 3
+Agent type: 4
+Agent type: 5
+Agent type: 6
+Agent type: 7
+Agent type: 8
+Agent type: 9
+Agent type: 10
+Agent type: 11
+Agent type: 12
+Agent type: 13
+Agent type: 14
+Agent type: 15
+Agent type: 16
+Agent type: 17
+Agent type: 18
+Agent type: 19
+Agent type: 20
+Agent type: 21
+Agent type: 22
+Agent type: 23
+Agent type: 24
+Agent type: 25
+Agent type: 26
+Agent type: 27
+Agent type: 28
+Process : 0/20, Time : 8.09, Collective reward (all types) : 22092.50, Objective : 22092.50, Test
+Process : 1/20, Time : 16.02, Collective reward (all types) : 22047.50, Objective : 22047.50, Test
+Process : 2/20, Time : 24.04, Collective reward (all types) : 22427.50, Objective : 22427.50, Test
+Process : 3/20, Time : 32.04, Collective reward (all types) : 21817.50, Objective : 21817.50, Test
+Process : 4/20, Time : 40.14, Collective reward (all types) : 21727.50, Objective : 21727.50, Test
+Process : 5/20, Time : 48.27, Collective reward (all types) : 21677.50, Objective : 21677.50, Test
+Process : 6/20, Time : 56.44, Collective reward (all types) : 21882.50, Objective : 21882.50, Test
+Process : 7/20, Time : 64.57, Collective reward (all types) : 21807.50, Objective : 21807.50, Test
+Process : 8/20, Time : 72.77, Collective reward (all types) : 21592.50, Objective : 21592.50, Test
+Process : 9/20, Time : 80.95, Collective reward (all types) : 21247.50, Objective : 21247.50, Test
+Process : 10/20, Time : 89.15, Collective reward (all types) : 22152.50, Objective : 22152.50, Test
+Process : 11/20, Time : 97.34, Collective reward (all types) : 22082.50, Objective : 22082.50, Test
+Process : 12/20, Time : 105.50, Collective reward (all types) : 21657.50, Objective : 21657.50, Test
+Process : 13/20, Time : 113.70, Collective reward (all types) : 22082.50, Objective : 22082.50, Test
+Process : 14/20, Time : 121.91, Collective reward (all types) : 22347.50, Objective : 22347.50, Test
+Process : 15/20, Time : 130.12, Collective reward (all types) : 22107.50, Objective : 22107.50, Test
+Process : 16/20, Time : 138.31, Collective reward (all types) : 22092.50, Objective : 22092.50, Test
+Process : 17/20, Time : 146.53, Collective reward (all types) : 21917.50, Objective : 21917.50, Test
+Process : 18/20, Time : 154.80, Collective reward (all types) : 22292.50, Objective : 22292.50, Test
+Process : 19/20, Time : 163.05, Collective reward (all types) : 21767.50, Objective : 21767.50, Test
+[[22092.5 22047.5 22427.5 21817.5 21727.5 21677.5 21882.5 21807.5 21592.5
+  21247.5 22152.5 22082.5 21657.5 22082.5 22347.5 22107.5 22092.5 21917.5
+  22292.5 21767.5]]
+[21941.]
+[279.29867526]
+Average Backlog : 2923.1342465753423
+Standard Deviation Backlog : 398.39565580826564
+Median Backlog : 3000.0
+Average Inventory : 600.0
+Standard Deviation Inventory : 206.4393373548416
+Metrics saved to 30_is_metrics_results.json
+
+====================================
+CPU Time used: 00:01:33
+CPU Percent: 75%
+Memory usage: 440600kb
+Approx Power usage: 0.0002
+Walltime usage: 00:03:35
+
+====================================

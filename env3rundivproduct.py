@@ -36,10 +36,8 @@ class MultiAgentInvManagementDiv():
             for p in range(self.num_products):
                 node_name = "node_" + str(i) + str(p)
                 self.node_names.append(node_name)
-        #{0: [1], 1: [2,3], 2: [4], 3:[5,6], 4:[], 5:[], 6:[]} 7 nodes 10 products = 70 agents
-        #{0: [1], 1: [2,3], 2: [4], 3:[], 4:[5], 5:[]} 6 nodes 5 products = [30 agents part 1]
+        #{0: [1], 1: [2,3], 2: [4], 3:[5,6], 4:[], 5:[], 6:[]} 7 nodes 10 products = 70 agents -- this one!
         #{0: [1], 1: [2,3], 2: [4], 3:[], 4:[]} 5 nodes 10 products = 50 agents (this one for 20 agents too)
-        #{0: [1], 1: [2,3], 2: [4], 3:[5,6], 4:[7], 5:[], 6:[], 7:[]} 8 nodes 10 producs = 80 agents
         #{0: [1], 1: [2,3], 2: [4], 3:[7,8], 4:[5,6], 5:[], 6:[], 7:[9], 8:[], 9:[]} 10 nodes 3 products = [30 agents part 2] -- this one works !!! 
 
         #{ 0: [1, 2], 1: [3, 4], 2: [5, 6], 3: [7, 8], 4: [9], 5: [10], 6: [], 
@@ -830,7 +828,7 @@ class MultiAgentInvManagementDiv():
             if not isinstance(value, np.ndarray):
                 raise TypeError(f"Value for key '{key, value}' is not a NumPy array. Value type: {type(value)}")
 """
-        return self.state, action_dict, rewards, self.action_mean, upd_state, fea
+        return self.state, action_dict, rewards, self.action_mean, upd_state, fea, info
 
     def get_rewards(self):
         rewards = {}
