@@ -7,6 +7,7 @@ main.pbs.o102205
 main.pbs.o136298
 main.pbs.o142925
 main.pbs.o152940
+env3rundiv.py 
 results_ssd/
 archive/
 main.pbs.*
@@ -15,3 +16,13 @@ __pycache__/
 mainpbs archive eqm/
 mainpbs files archive/
 figs/
+figures/code/
+*.pbs
+*.out
+*.err
+*.log
+*.txt
+*.csv
+*.json
+*.pdf
+*.png

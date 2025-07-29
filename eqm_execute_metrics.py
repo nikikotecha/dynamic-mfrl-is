@@ -94,6 +94,9 @@ def wasserstein_1d(mu_p, std_p, mu_q, std_q):
     std_q = std_q.clamp(min=eps)
     return (torch.abs(mu_p - mu_q) + torch.abs(std_p - std_q)).sum(dim=-1)
 
+def wasserstein_2_diag(mu_p, std_p, mu_q, std_q):
+    return torch.sqrt(((mu_p - mu_q) ** 2 + (std_p - std_q) ** 2).sum(dim=-1))
+
 def compute_divergences(obs_tensor, br_actor, base_actor):
     mu_br, std_br = br_actor.get_distribution_params(obs_tensor)
     mu_base, std_base = base_actor.get_distribution_params(obs_tensor)

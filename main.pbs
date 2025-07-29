@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -l select=1:ncpus=1:mem=400gb:ngpus=0
-#PBS -l walltime=05:00:00
+#PBS -l walltime=72:00:00
 
 cd $PBS_O_WORKDIR
 

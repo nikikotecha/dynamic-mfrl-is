@@ -21,9 +21,9 @@ Notes: You will run this 'main_ssd.py' file but you should change settings in 'p
 
 GREEDY_BETA = 0.001
 
-base_path = "/rds/general/user/nk3118/home/mfmarl-1/results_ssd/mf_100_restart2_nn/saved/"
-base_num = "000007399.tar"
-print_statement = "100_mf"
+base_path = "/rds/general/user/nk3118/home/mfmarl-1/results_ssd/test_250625_1247100_mf_retry/saved/"
+base_num = "000002999.tar"
+print_statement = "100_mf2"
 
 def load_data(path, name, networks, env):
     """

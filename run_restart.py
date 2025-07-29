@@ -16,9 +16,9 @@ import torch
 """
 Notes: You will run this 'main_ssd.py' file but you should change settings in 'parsed_args_ssd.py'
 """
-print_statement = "is 100 agents restart x2 000004799"
-file_path = "/rds/general/user/nk3118/home/mfmarl-1/results_ssd/is_100agents_restart/saved/"
-file_num = "000004799.tar"
+print_statement = "mf 100 agents nn restart x2 000006199.tar"
+file_path = "/rds/general/user/nk3118/home/mfmarl-1/results_ssd/mf_100_restart2_nn/saved/"
+file_num = "000006199.tar"
 
 print("run restart running")
 GREEDY_BETA = 0.001

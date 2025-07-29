@@ -6,15 +6,15 @@ import numpy as np
 paths = {
     "IS": {
         30: "results_ssd/eqm_BR/execute/30_is_execute/saved",
-        50: "results_ssd/eqm_BR/execute/z_eqm_archive_run2/50_is_execute/saved",
+        50: "results_ssd/eqm_BR/execute/50_is_execute/saved",
         70: "results_ssd/eqm_BR/execute/z_eqm_archive_run2/70_is_execute/saved",
         100: "results_ssd/eqm_BR/execute/z_eqm_archive_run2/100_is_execute/saved"
     },
     "MF": {
         30: "results_ssd/eqm_BR/execute/30_mf_execute/saved",
-        50: "results_ssd/eqm_BR/execute/z_eqm_archive_run2/50_mf_execute/saved",
-        70: "results_ssd/eqm_BR/execute/z_eqm_archive_run2/70_mf_execute/saved",
-        100: "results_ssd/eqm_BR/execute/z_eqm_archive_run2/100_mf_execute/saved"
+        50: "results_ssd/eqm_BR/execute/50_mf_execute/saved",
+        70: "results_ssd/eqm_BR/execute/70_mf_execute/saved",
+        100: "results_ssd/eqm_BR/execute/100_mf_execute/saved"
     }
 }
 
@@ -44,12 +44,7 @@ def extract_metrics(directory):
                 elif w is not None:
                     wass_vals.append(w)
 
-                # Inventory and backlog and collective rewards base
-                inventory.append(data.get("inventory", [0]))
-                backlog.append(data.get("backlog", [0]))
                 rewards.append(data.get("collective_reward_base", [0]))
-
-
     
     return exploitability, kl_vals, wass_vals, inventory, backlog, rewards
 
@@ -71,19 +66,30 @@ for method in ["IS", "MF"]:
         results[method]["agent_counts"][n]["exploit_std"] = np.std(exploit)
         results[method]["agent_counts"][n]["kl_std"] = np.std(kl)
         results[method]["agent_counts"][n]["wass_std"] = np.std(wass)
-        results[method]["agent_counts"][n]["inventory"] = np.mean(inventory)
-        print("av_backlog", av_backlog)
-        last_values_backlog = [backlog[-1] for backlog in av_backlog]
-        last_values_backlog = np.mean(av_backlog, axis = 0)
-        average_backlog = np.mean(last_values_backlog)
-        results[method]["agent_counts"][n]["backlog"] = average_backlog
-        results[method]["agent_counts"][n]["inventory_std"] = np.std(inventory)
-        results[method]["agent_counts"][n]["backlog_std"] = np.std(last_values_backlog)
+        print("rewards", rewards)
+        print("rewards length", len(rewards))
         last_collective_rewards = [rewards[-1] for rewards in rewards]
+        print("last_collective_rewards", last_collective_rewards)
         results[method]["agent_counts"][n]["rewards"] = last_collective_rewards
 
 print("Data extraction complete.") 
 print("Results:", results)
+def convert_np(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: convert_np(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_np(i) for i in obj]
+    else:
+        return obj
+
+results = convert_np(results)
+# Save results to JSON
+output_file = "eqm_results.json"
+with open(output_file, "w") as f:
+    json.dump(results, f, indent=4)
+
 # ---------- PLOTTING FUNCTION ----------
 def plot_metric(metric_name, ylabel, filename):
     plt.figure(figsize=(8, 6))

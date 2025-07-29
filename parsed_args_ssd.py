@@ -121,7 +121,7 @@ args.num_types = 1
 args.num_agents = [100]
 args.rew_clean = 0.05
 args.rew_harvest = 0.95
-args.eqm_analysis = True
+args.eqm_analysis = False
 """ Setting for the reward designer's problem. """
 args.lv_penalty = 0.0
 args.lv_incentive = 0.0
@@ -131,8 +131,8 @@ args.mode_ac = True  # True if actor-critic/psi.
 args.mode_psi = False  # True if SF.
 args.mode_mfp = False  # True if MFP.
 args.mode_mfap = False # True if MFAP.
-args.mode_is = True # True if we use importance sampling for the critic loss calculation.
-args.importance_sampling = True # True if we use importance sampling for the critic loss calculation.
+args.mode_is = False # True if we use importance sampling for the critic loss calculation.
+args.importance_sampling = False # True if we use importance sampling for the critic loss calculation.
 
 args.h_dims_a = [256, 128, 64, 32]
 args.h_dims_c = [256, 128, 64, 32]
