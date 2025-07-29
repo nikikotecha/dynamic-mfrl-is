@@ -8,9 +8,12 @@ main.pbs.*
 
 # Ignore specific Python files
 env3rundiv.py
-eqm_figures.py
-eqm_execute_metrics.py
+env_execute.py
+eqm_analysis.py
 eqm_execute.py
+eqm_execute_metrics.py
+eqm_figures.py
+eqm_metrics.py
 
 # Ignore directories
 archive/
