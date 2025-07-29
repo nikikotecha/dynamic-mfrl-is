@@ -1,6 +1,6 @@
 # Learning Under Changing Fields: Importance Sampling for Dynamic Mean-Field Agents
 
-[![AAAI 2026](https://img.shields.io/badge/AAAI-2025-blue.svg)](https://aaai.org/conference/aaai/aaai-26/)
+[![AAAI 2026](https://img.shields.io/badge/AAAI-2026-blue.svg)](https://aaai.org/conference/aaai/aaai-26/)
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
 [![PyTorch 1.12](https://img.shields.io/badge/PyTorch-1.12-red.svg)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
