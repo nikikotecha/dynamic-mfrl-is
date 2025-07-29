@@ -1,33 +1,32 @@
 # Ignore everything in the results_ssd folder
 results_ssd/
 
-# Ignore all .pbs files
-
-main.pbs.o102205
-main.pbs.o136298
-main.pbs.o142925
-main.pbs.o152940
-env3rundiv.py 
-results_ssd/
-archive/
+# Ignore PBS job files
+*.pbs
+main.pbs
 main.pbs.*
+
+# Ignore specific Python files
+env3rundiv.py
+eqm_figures.py
+eqm_execute_metrics.py
+eqm_execute.py
+
+# Ignore directories
+archive/
 __pycache__/
-*.png
-mainpbs archive eqm/
-mainpbs files archive/
 figs/
 figures/code/
-*.pbs
+figures_code/
+mainpbs archive eqm/
+mainpbs files archive/
+
+# Ignore output and data files
+*.png
+*.pdf
 *.out
 *.err
 *.log
 *.txt
 *.csv
 *.json
-*.pdf
-*.png
-figures_code/
-main.pbs
-eqm_figures.py
-eqm_execute_metrics.py
-eqm_execute.py
