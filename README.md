@@ -1,15 +1,15 @@
 # Learning Under Changing Fields: Importance Sampling for Dynamic Mean-Field Agents
 
-[![AAAI 2025](https://img.shields.io/badge/AAAI-2025-blue.svg)](https://aaai.org/conference/aaai/aaai-25/)
+[![AAAI 2026](https://img.shields.io/badge/AAAI-2025-blue.svg)](https://aaai.org/conference/aaai/aaai-26/)
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
 [![PyTorch 1.12](https://img.shields.io/badge/PyTorch-1.12-red.svg)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> **Submitted to AAAI 2025** - *Conference on Artificial Intelligence*
+> **Submitted to AAAI 2026** - *Conference on Artificial Intelligence*
 
 ## 📖 Abstract
 
-This repository contains the implementation of our AAAI 2025 submission on **Learning Under Changing Fields: Importance Sampling for Dynamic Mean-Field Agents**. 
+This repository contains the implementation of our AAAI 2026 submission on **Learning Under Changing Fields: Importance Sampling for Dynamic Mean-Field Agents**. 
 
 Mean-Field Reinforcement Learning (MFRL) enables scalable solutions for large-scale multi-agent systems by approximating agent interactions through population averages. However, a key limitation arises from temporal mismatches in the mean action distribution, which degrade learning performance as agent polices evolve. 
 
