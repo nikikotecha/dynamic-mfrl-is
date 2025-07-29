@@ -115,10 +115,10 @@ python execute.py --method is --num_agents 50 --num_episodes 1000
 
 # Train with standard Mean-Field (MF) approach  
 python execute.py --method mf --num_agents 50 --num_episodes 1000
-
+```
 ## 📁 Repository Structure
 
-```
+```text
 mfmarl/
 ├── 📄 README.md                    # This file
 ├── 📄 environment.yml              # Conda environment
@@ -134,6 +134,7 @@ mfmarl/
 ├── 📄 env3rundivproduct.py        # Environment definition
 └── 📄 __init__.py                 # Package initialization
 ```
+
 
 
 
