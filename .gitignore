@@ -26,3 +26,8 @@ figures/code/
 *.json
 *.pdf
 *.png
+figures_code/
+main.pbs
+eqm_figures.py
+eqm_execute_metrics.py
+eqm_execute.py
